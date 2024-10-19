@@ -1,7 +1,5 @@
 module;
-
 export module engine.components;
-
 import arbor;
 
 namespace arbor {
