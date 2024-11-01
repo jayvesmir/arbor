@@ -15,9 +15,11 @@ import arbor.types;
 namespace arbor {
     namespace engine {
         class instance;
+        class component;
 
         export class window {
             friend class instance;
+            friend class component;
 
             bool m_initialized = false;
 

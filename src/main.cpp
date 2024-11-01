@@ -1,7 +1,5 @@
 #include "spdlog/spdlog.h"
 
-#include <exception>
-
 import arbor;
 import engine;
 
@@ -15,6 +13,6 @@ int32_t main(int32_t argc, char** argv) {
         .height = 720,
     };
 
-    if (auto res = engine.create_app(app_config); !res)
+    if (auto res = engine.start(app_config); !res)
         return -1;
 }
