@@ -1,12 +1,11 @@
-module;
-#include <cstdint>
+#pragma once
 #include <string>
 
-export module engine.application;
+#include "arbor.hpp"
 
 namespace arbor {
     namespace engine {
-        export struct application_config {
+        struct application_config {
             struct window_config {
                 std::string title;
                 int32_t width, height;

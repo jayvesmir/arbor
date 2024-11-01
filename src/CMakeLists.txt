@@ -4,11 +4,8 @@ file(GLOB SOURCES
     LIST_DIRECTORIES false
     ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
 
-file(GLOB MODULE_SOURCES 
-    LIST_DIRECTORIES false
-    ${CMAKE_CURRENT_SOURCE_DIR} *.cppm)
-
-file(GLOB_RECURSE ENGINE_MODULE_SOURCES ${CMAKE_CURRENT_SOURCE_DIR} "engine/*.cppm")
+file(GLOB_RECURSE ENGINE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR} "engine/*.cpp")
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -18,18 +15,13 @@ target_sources(${PROJECT_NAME}
         ${SOURCES}
 )
 
-add_library(${PROJECT_NAME}_global_modules)
-target_sources(${PROJECT_NAME}_global_modules
-    PUBLIC FILE_SET CXX_MODULES FILES
-        ${MODULE_SOURCES}
-)
-
 add_library(${PROJECT_NAME}_engine)
 target_sources(${PROJECT_NAME}_engine
-    PUBLIC FILE_SET CXX_MODULES FILES
-        ${ENGINE_MODULE_SOURCES}
+    PUBLIC
+        ${ENGINE_SOURCES}
 )
 
 target_link_libraries(${PROJECT_NAME}_engine PRIVATE ${PROJECT_NAME}_external)
-target_link_libraries(${PROJECT_NAME}_engine PUBLIC ${PROJECT_NAME}_global_modules)
+target_include_directories(${PROJECT_NAME}_engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_external ${PROJECT_NAME}_engine)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

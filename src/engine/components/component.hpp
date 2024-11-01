@@ -1,19 +1,16 @@
-module;
+#pragma once
 #include <expected>
 #include <memory>
 #include <string>
 
 #include "spdlog/spdlog.h"
 
-export module engine.components;
-import arbor;
-import engine.logger_utils;
+#include "arbor.hpp"
+#include "engine/logger_utils.hpp"
 
 namespace arbor {
     namespace engine {
-        class instance;
-
-        export class component {
+        class component {
           public:
             enum etype {
                 invalid  = -1,
@@ -28,16 +25,12 @@ namespace arbor {
           public:
             virtual ~component() = default;
 
-            auto initialize_component_logger();
+            std::shared_ptr<spdlog::logger> initialize_component_logger();
             constexpr auto type() const { return m_type; }
             constexpr auto identifier() const { return m_identifier; }
 
             virtual void shutdown()                         = 0;
             virtual std::expected<void, std::string> init() = 0;
         };
-
-        auto component::initialize_component_logger() {
-            m_logger = engine::make_logger(m_identifier);
-        }
     } // namespace engine
 } // namespace arbor

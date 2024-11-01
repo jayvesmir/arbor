@@ -1,14 +1,8 @@
-module;
-#include <string>
-
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
-
-export module engine.logger_utils;
+#include "engine/logger_utils.hpp"
 
 namespace arbor {
     namespace engine {
-        export auto make_logger(const std::string& name) {
+        std::shared_ptr<spdlog::logger> make_logger(const std::string& name) {
             auto logger = spdlog::stdout_color_mt(name);
 
             logger->disable_backtrace();

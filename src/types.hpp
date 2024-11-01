@@ -1,8 +1,6 @@
-module;
+#pragma once
 
-export module arbor.types;
-
-export namespace arbor {
+namespace arbor {
     using int8_t  = char;
     using int16_t = short;
     using int32_t = int;

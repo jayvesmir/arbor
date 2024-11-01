@@ -1,7 +1,7 @@
 #include "spdlog/spdlog.h"
 
-import arbor;
-import engine;
+#include "arbor.hpp"
+#include "engine/engine.hpp"
 
 int32_t main(int32_t argc, char** argv) {
     arbor::engine::instance engine;
