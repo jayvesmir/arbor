@@ -38,7 +38,7 @@ namespace arbor {
             ~window();
 
             auto poll_event() { return std::pair(SDL_PollEvent(&m_current_event), std::ref(m_current_event)); }
-            std::expected<bool, std::string> create(int32_t width, int32_t height, const std::string& title);
+            std::expected<void, std::string> create(int32_t width, int32_t height, const std::string& title);
 
             constexpr auto title() const { return m_title; }
             constexpr auto width() const { return m_width; }
@@ -52,7 +52,7 @@ namespace arbor {
             SDL_QuitSubSystem(m_init_flags);
         }
 
-        std::expected<bool, std::string> window::create(int32_t width, int32_t height, const std::string& title) {
+        std::expected<void, std::string> window::create(int32_t width, int32_t height, const std::string& title) {
 #define sdl_error(fmt_str, ...)                                  \
     {                                                            \
         const auto __fmt = fmt::format(fmt_str, SDL_GetError()); \
