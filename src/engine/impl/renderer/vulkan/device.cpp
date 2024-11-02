@@ -91,6 +91,8 @@ namespace arbor {
             if (auto res = vkCreateDevice(vk.physical_device.handle, &create_info, nullptr, &vk.device); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to create a vulkan device: {}", string_VkResult(res)));
 
+            vkGetDeviceQueue(vk.device, vk.physical_device.queue_family_indices.graphics_family, 0, &vk.graphics_queue);
+
             return {};
         }
     } // namespace engine
