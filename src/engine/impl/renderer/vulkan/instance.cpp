@@ -4,7 +4,7 @@
 #include "fmt/ranges.h"
 
 #include "vulkan/vk_enum_string_helper.h"
-#include <vulkan/vulkan_core.h>
+#include "vulkan/vulkan_core.h"
 
 namespace arbor {
     namespace engine {
@@ -42,7 +42,7 @@ namespace arbor {
             vk.instance_lay.push_back("VK_LAYER_KHRONOS_validation");
 #endif
 
-            m_logger->debug("creating vulkan instance with {} extensions: {}", vk.instance_ext.size(), fmt::join(vk.instance_ext, ", "));
+            m_logger->debug("creating a vulkan instance with {} extensions: {}", vk.instance_ext.size(), fmt::join(vk.instance_ext, ", "));
             m_logger->debug("and {} layers: {}", vk.instance_lay.size(), fmt::join(vk.instance_lay, ", "));
 
             app_info.apiVersion         = VK_API_VERSION_1_3;
@@ -69,16 +69,15 @@ namespace arbor {
             messenger_create_info.messageSeverity =
                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-            messenger_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                                                VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                                                VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+            messenger_create_info.messageType =
+                VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
             messenger_create_info.pfnUserCallback = debug_messenger_callback;
             messenger_create_info.pUserData       = m_logger.get();
 
             auto create_fn =
                 reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(vk.instance, "vkCreateDebugUtilsMessengerEXT"));
             if (auto res = create_fn(vk.instance, &messenger_create_info, nullptr, &vk.debug_messenger); res != VK_SUCCESS)
-                return std::unexpected(fmt::format("failed to create a vulkan debug messenged: {}", string_VkResult(res)));
+                return std::unexpected(fmt::format("failed to create a vulkan debug messenger: {}", string_VkResult(res)));
 #endif
             return {};
         } // namespace engine

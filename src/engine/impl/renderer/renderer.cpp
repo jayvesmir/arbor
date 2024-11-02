@@ -7,7 +7,19 @@ namespace arbor {
             m_type       = etype::renderer;
         }
 
-        void renderer::shutdown() {}
+        void renderer::shutdown() {
+            if (vk.device)
+                vkDestroyDevice(vk.device, nullptr);
+
+            if (vk.debug_messenger) {
+                auto destroy_fn = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+                    vkGetInstanceProcAddr(vk.instance, "vkDestroyDebugUtilsMessengerEXT"));
+                destroy_fn(vk.instance, vk.debug_messenger, nullptr);
+            }
+
+            if (vk.instance)
+                vkDestroyInstance(vk.instance, nullptr);
+        }
 
         std::expected<void, std::string> renderer::init() {
             initialize_component_logger();
@@ -15,6 +27,9 @@ namespace arbor {
             m_logger->debug("parent window: {}", fmt::ptr(&m_parent.window()));
 
             if (auto res = make_vk_instance(); !res)
+                return res;
+
+            if (auto res = make_vk_device(); !res)
                 return res;
 
             return {};
