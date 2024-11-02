@@ -9,14 +9,16 @@
 #include "SDL3/SDL_video.h"
 #include "fmt/format.h"
 
+#include "engine/components/components.hpp"
+
 namespace arbor {
     namespace engine {
         class instance;
-        class component;
 
         class window {
-            friend class instance;
-            friend class component;
+            friend class engine::instance;
+            friend class engine::component;
+            friend class engine::renderer;
 
             bool m_initialized = false;
 
@@ -34,7 +36,11 @@ namespace arbor {
             constexpr auto current_event() const { return std::ref(m_current_event); }
 
           public:
+            window() = default;
             ~window();
+
+            window(window&&)      = delete;
+            window(const window&) = delete;
 
             auto poll_event() { return std::pair(SDL_PollEvent(&m_current_event), std::ref(m_current_event)); }
             std::expected<void, std::string> create(int32_t width, int32_t height, const std::string& title);

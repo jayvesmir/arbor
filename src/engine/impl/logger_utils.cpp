@@ -7,7 +7,7 @@ namespace arbor {
 
             logger->disable_backtrace();
             logger->set_pattern("(%X.%e) {%n} [%^%l%$] %v");
-#if NDEBUG
+#ifdef NDEBUG
             logger->set_level(spdlog::level::info);
 #else
             logger->set_level(spdlog::level::trace);

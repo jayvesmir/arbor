@@ -23,7 +23,11 @@ namespace arbor {
             std::shared_ptr<spdlog::logger> m_logger;
 
           public:
+            component()          = default;
             virtual ~component() = default;
+
+            component(component&&)      = delete;
+            component(const component&) = delete;
 
             std::shared_ptr<spdlog::logger> initialize_component_logger();
             constexpr auto type() const { return m_type; }
