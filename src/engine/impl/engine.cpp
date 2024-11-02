@@ -76,8 +76,6 @@ namespace arbor {
                 m_running.notify_all();
             }
 
-            m_logger->debug("got event! type={:x}", event.type);
-
             return {};
         }
     } // namespace engine
