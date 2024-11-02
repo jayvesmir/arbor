@@ -61,7 +61,7 @@ namespace arbor {
                 return std::unexpected(fmt::format("failed to create a vulkan instance: {}", string_VkResult(res)));
 
 #ifndef NDEBUG
-            m_logger->debug("creating a debug messeneger");
+            m_logger->debug("creating a debug messenger");
 
             VkDebugUtilsMessengerCreateInfoEXT messenger_create_info{};
 
