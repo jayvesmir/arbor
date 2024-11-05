@@ -8,6 +8,9 @@ namespace arbor {
         }
 
         void renderer::shutdown() {
+            if (vk.surface)
+                vkDestroySurfaceKHR(vk.instance, vk.surface, nullptr);
+
             if (vk.device)
                 vkDestroyDevice(vk.device, nullptr);
 
@@ -27,6 +30,9 @@ namespace arbor {
             m_logger->debug("parent window: {}", fmt::ptr(&m_parent.window()));
 
             if (auto res = make_vk_instance(); !res)
+                return res;
+
+            if (auto res = make_vk_surface(); !res)
                 return res;
 
             if (auto res = make_vk_device(); !res)

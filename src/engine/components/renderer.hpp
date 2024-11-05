@@ -16,6 +16,7 @@ namespace arbor {
         namespace vk {
             struct device_queue_family_indices {
                 uint32_t graphics_family;
+                uint32_t present_family;
             };
         } // namespace vk
 
@@ -36,8 +37,11 @@ namespace arbor {
                     vk::device_queue_family_indices queue_family_indices;
                 } physical_device;
 
+                VkSurfaceKHR surface = VK_NULL_HANDLE;
+
                 VkDevice device        = VK_NULL_HANDLE;
                 VkQueue graphics_queue = VK_NULL_HANDLE;
+                VkQueue present_queue  = VK_NULL_HANDLE;
 
                 std::vector<const char*> device_ext;
                 std::vector<const char*> device_lay;
@@ -56,6 +60,7 @@ namespace arbor {
           private:
             std::expected<void, std::string> make_vk_instance();
             std::expected<void, std::string> make_vk_device();
+            std::expected<void, std::string> make_vk_surface();
         };
     } // namespace engine
 } // namespace arbor
