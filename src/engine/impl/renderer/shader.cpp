@@ -55,5 +55,13 @@ namespace arbor {
 
             return {};
         }
+
+        VkShaderStageFlagBits renderer::shader::stage() const {
+            static std::unordered_map<shader::etype, VkShaderStageFlagBits> type_translation_map = {
+                {etype::vertex, VK_SHADER_STAGE_VERTEX_BIT},
+                {etype::fragment, VK_SHADER_STAGE_FRAGMENT_BIT},
+            };
+            return type_translation_map[m_type];
+        }
     } // namespace engine
 } // namespace arbor

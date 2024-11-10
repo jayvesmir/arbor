@@ -5,7 +5,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 #include "arbor.hpp"
 #include "engine/components/component.hpp"
@@ -52,7 +51,9 @@ namespace arbor {
                 shader(const std::filesystem::path& glsl_source, shader::etype type, VkDevice device)
                     : m_source(glsl_source), m_type(type), m_vk_device(device) {}
 
-                shader(shader&& other) : m_source(std::move(other.m_source)), m_type(other.m_type), m_vk_device(other.m_vk_device) {
+                shader(shader&& other)
+                    : m_source(std::move(other.m_source)), m_type(other.m_type), m_vk_device(other.m_vk_device),
+                      m_vk_shader(other.m_vk_shader) {
                     other.m_type      = etype::invalid;
                     other.m_vk_device = VK_NULL_HANDLE;
                     other.m_vk_shader = VK_NULL_HANDLE;
@@ -75,6 +76,7 @@ namespace arbor {
 
                 std::expected<void, std::string> compile();
 
+                VkShaderStageFlagBits stage() const;
                 auto source() const { return m_source; }
                 constexpr auto type() const { return m_type; }
                 constexpr auto shader_module() const { return m_vk_shader; }
@@ -86,21 +88,35 @@ namespace arbor {
 
             class pipeline {
                 friend class renderer;
-                std::shared_ptr<spdlog::logger> m_logger;
+                const engine::renderer& m_parent;
                 bool m_initialized = false;
 
-                VkDevice m_vk_device = VK_NULL_HANDLE;
+                VkPipelineLayoutCreateInfo m_pipeline_layout_create_info{};
+                VkPipelineColorBlendAttachmentState m_color_blend_attachment{};
+                VkPipelineDynamicStateCreateInfo m_dynamic_state{};
+                VkPipelineViewportStateCreateInfo m_viewport_state{};
+                VkPipelineRasterizationStateCreateInfo m_rasterizer_state{};
+                VkPipelineVertexInputStateCreateInfo m_vertex_input_state{};
+                VkPipelineMultisampleStateCreateInfo m_multisampler_state{};
+                VkPipelineColorBlendStateCreateInfo m_color_blend_state{};
+                VkPipelineInputAssemblyStateCreateInfo m_input_assembly_state{};
+
+                VkRect2D m_scissor;
+                VkViewport m_viewport;
+
+                VkPipeline m_pipeline;
+                VkRenderPass m_render_pass;
+                VkPipelineLayout m_pipeline_layout;
+
+                std::vector<VkDynamicState> m_dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+                std::vector<VkPipelineShaderStageCreateInfo> m_changed_pipeline_stages;
 
                 std::unordered_map<shader::etype, engine::renderer::shader> m_shaders;
 
               public:
                 ~pipeline();
-                pipeline(VkDevice device) : m_vk_device(device) { m_logger = engine::make_logger("renderer pipeline"); }
-
-                pipeline(pipeline&& other)
-                    : m_logger(std::move(other.m_logger)), m_vk_device(other.m_vk_device), m_shaders(std::move(other.m_shaders)) {
-                    other.m_vk_device = VK_NULL_HANDLE;
-                };
+                pipeline(const engine::renderer& parent) : m_parent(parent) {}
+                pipeline(pipeline&& other) : m_parent(other.m_parent), m_shaders(std::move(other.m_shaders)) {}
 
                 pipeline(const pipeline&) = delete;
 
