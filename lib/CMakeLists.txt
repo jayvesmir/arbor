@@ -5,14 +5,18 @@ option(SPDLOG_FMT_EXTERNAL "" true)
 option(SDL_SHARED "" false)
 option(SDL_STATIC "" true)
 
+option(SHADERC_SKIP_TESTS "" true)
+option(SHADERC_SKIP_INSTALL "" true)
+
 add_subdirectory(fmt)
 add_subdirectory(sdl)
 add_subdirectory(spdlog)
+add_subdirectory(shaderc)
 
 find_package(Vulkan REQUIRED)
 
 add_library(${PROJECT_NAME}_external INTERFACE)
 
-target_link_libraries(${PROJECT_NAME}_external INTERFACE spdlog SDL3-static ${Vulkan_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_external INTERFACE spdlog SDL3-static shaderc_combined ${Vulkan_LIBRARIES})
 target_link_directories(${PROJECT_NAME}_external INTERFACE ${Vulkan_LIBRARY_DIRS})
 target_include_directories(${PROJECT_NAME}_external INTERFACE ${Vulkan_INCLUDE_DIRS})

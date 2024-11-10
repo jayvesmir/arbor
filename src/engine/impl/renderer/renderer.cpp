@@ -8,8 +8,18 @@ namespace arbor {
         }
 
         void renderer::shutdown() {
-            if (vk.surface)
-                vkDestroySurfaceKHR(vk.instance, vk.surface, nullptr);
+            m_pipelines.clear();
+
+            for (auto& image_view : vk.swapchain.image_views) {
+                if (image_view)
+                    vkDestroyImageView(vk.device, image_view, nullptr);
+            }
+
+            if (vk.swapchain.handle)
+                vkDestroySwapchainKHR(vk.device, vk.swapchain.handle, nullptr);
+
+            if (vk.swapchain.surface)
+                vkDestroySurfaceKHR(vk.instance, vk.swapchain.surface, nullptr);
 
             if (vk.device)
                 vkDestroyDevice(vk.device, nullptr);
@@ -36,6 +46,12 @@ namespace arbor {
                 return res;
 
             if (auto res = make_vk_device(); !res)
+                return res;
+
+            if (auto res = make_vk_swapchain(); !res)
+                return res;
+
+            if (auto res = make_vk_pipeline(); !res)
                 return res;
 
             return {};

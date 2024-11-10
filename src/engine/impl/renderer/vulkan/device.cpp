@@ -2,8 +2,10 @@
 #include <algorithm>
 #include <array>
 #include <ranges>
+#include <set>
 #include <tuple>
 
+#include "fmt/base.h"
 #include "fmt/ranges.h"
 
 #include "vulkan/vk_enum_string_helper.h"
@@ -11,8 +13,9 @@
 
 namespace arbor {
     namespace engine {
-        std::expected<std::tuple<VkPhysicalDevice, VkPhysicalDeviceFeatures, VkPhysicalDeviceProperties, vk::device_queue_family_indices>,
-                      std::string>
+        std::expected<
+            std::tuple<VkPhysicalDevice, VkPhysicalDeviceFeatures, VkPhysicalDeviceProperties, detail::device_queue_family_indices>,
+            std::string>
         find_physical_device(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface) {
             for (const auto& device : devices) {
                 VkPhysicalDeviceFeatures features;
@@ -32,22 +35,21 @@ namespace arbor {
                 auto graphics_qf_it = std::ranges::find_if(
                     queue_families, [](const auto& qf) { return static_cast<bool>(qf.queueFlags & VK_QUEUE_GRAPHICS_BIT); });
 
-                auto present_qf_idx = -1;
+                auto present_qf_it = std::ranges::find_if(queue_families, [&](const auto& qf) {
+                    auto i = (&qf - queue_families.data());
 
-                for (auto i = 0ull; i < queue_families.size(); i++) {
                     VkBool32 supports_present = false;
                     vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &supports_present);
 
-                    if (supports_present)
-                        present_qf_idx = i;
-                }
+                    return static_cast<bool>(supports_present);
+                });
 
-                if (graphics_qf_it == queue_families.end() || present_qf_idx == -1)
-                    continue;
+                if (graphics_qf_it == queue_families.end() || present_qf_it == queue_families.end())
+                    std::unexpected("failed to find a vulkan device");
 
-                vk::device_queue_family_indices qf_indices = {
-                    .graphics_family = static_cast<uint32_t>(std::distance(graphics_qf_it, queue_families.begin())),
-                    .present_family  = static_cast<uint32_t>(present_qf_idx),
+                detail::device_queue_family_indices qf_indices = {
+                    .graphics_family = static_cast<uint32_t>(std::distance(queue_families.begin(), graphics_qf_it)),
+                    .present_family  = static_cast<uint32_t>(std::distance(queue_families.begin(), present_qf_it)),
                 };
 
                 return {{device, features, properties, qf_indices}};
@@ -66,18 +68,24 @@ namespace arbor {
             if (physical_devices.empty())
                 return std::unexpected("failed to find a vulkan device");
 
-            if (auto physical_device = find_physical_device(physical_devices, vk.surface); physical_device) {
+            if (auto physical_device = find_physical_device(physical_devices, vk.swapchain.surface); physical_device) {
                 vk.physical_device.handle               = std::get<VkPhysicalDevice>(*physical_device);
                 vk.physical_device.features             = std::get<VkPhysicalDeviceFeatures>(*physical_device);
                 vk.physical_device.properties           = std::get<VkPhysicalDeviceProperties>(*physical_device);
-                vk.physical_device.queue_family_indices = std::get<vk::device_queue_family_indices>(*physical_device);
+                vk.physical_device.queue_family_indices = std::get<detail::device_queue_family_indices>(*physical_device);
             } else
                 return std::unexpected(physical_device.error());
 
             m_logger->info("using '{}' as vulkan device", vk.physical_device.properties.deviceName);
 
             VkDeviceCreateInfo create_info{};
-            std::array<VkDeviceQueueCreateInfo, 2> queue_create_infos{};
+            std::set<uint32_t> qf_set{
+                vk.physical_device.queue_family_indices.graphics_family,
+                vk.physical_device.queue_family_indices.present_family,
+            };
+
+            std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+            queue_create_infos.reserve(qf_set.size());
 
             vk.device_lay.resize(vk.instance_lay.size());
             std::ranges::copy(vk.instance_lay, vk.device_lay.begin());
@@ -85,14 +93,15 @@ namespace arbor {
             vk.device_ext.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
             float queue_priority = 1.0f;
-            for (auto& queue_create_info : queue_create_infos) {
+            for (auto qf : qf_set) {
+                VkDeviceQueueCreateInfo queue_create_info{};
                 queue_create_info.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
                 queue_create_info.queueCount       = 1;
+                queue_create_info.queueFamilyIndex = qf;
                 queue_create_info.pQueuePriorities = &queue_priority;
-            }
 
-            queue_create_infos[0].queueFamilyIndex = vk.physical_device.queue_family_indices.graphics_family;
-            queue_create_infos[1].queueFamilyIndex = vk.physical_device.queue_family_indices.present_family;
+                queue_create_infos.push_back(queue_create_info);
+            }
 
             create_info.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
             create_info.queueCreateInfoCount    = queue_create_infos.size();
