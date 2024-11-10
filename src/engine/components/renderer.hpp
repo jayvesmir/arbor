@@ -122,6 +122,12 @@ namespace arbor {
 
                 std::expected<void, std::string> reload();
                 std::expected<void, std::string> bind_shader(const std::filesystem::path& glsl_source, shader::etype type);
+
+              protected:
+                constexpr auto scissors() const { return &m_scissor; }
+                constexpr auto viewports() const { return &m_viewport; }
+                constexpr auto render_pass() const { return m_render_pass; }
+                constexpr auto pipeline_handle() const { return m_pipeline; }
             };
 
           private:
@@ -148,6 +154,7 @@ namespace arbor {
 
                     std::vector<VkImage> images;
                     std::vector<VkImageView> image_views;
+                    std::vector<VkFramebuffer> framebuffers;
 
                     VkExtent2D extent;
                     VkSurfaceFormatKHR format;
@@ -159,6 +166,20 @@ namespace arbor {
                 VkQueue graphics_queue = VK_NULL_HANDLE;
                 VkQueue present_queue  = VK_NULL_HANDLE;
 
+                VkCommandPool command_pool = VK_NULL_HANDLE;
+                std::vector<VkCommandBuffer> command_buffers;
+
+                struct {
+                    const uint32_t frames_in_flight = 1;
+
+                    uint32_t current_frame = 0;
+                    std::vector<VkSemaphore> wait_semaphores;
+                    std::vector<VkSemaphore> signal_semaphores;
+                    std::vector<VkFence> in_flight_fences;
+
+                    VkPresentInfoKHR present_info{};
+                } sync;
+
                 std::vector<const char*> device_ext;
                 std::vector<const char*> device_lay;
             } vk;
@@ -167,7 +188,7 @@ namespace arbor {
 
           public:
             renderer(const engine::instance& parent);
-            ~renderer() = default;
+            ~renderer() { shutdown(); }
 
             renderer(renderer&&)      = delete;
             renderer(const renderer&) = delete;
@@ -175,12 +196,18 @@ namespace arbor {
             void shutdown() override;
             std::expected<void, std::string> init() override;
 
+            std::expected<void, std::string> update() override;
+
           private:
+            std::expected<uint32_t, std::string> acquire_image();
+
             std::expected<void, std::string> make_vk_instance();
             std::expected<void, std::string> make_vk_device();
             std::expected<void, std::string> make_vk_surface();
             std::expected<void, std::string> make_vk_pipeline();
             std::expected<void, std::string> make_vk_swapchain();
+            std::expected<void, std::string> make_vk_command_pool_and_buffer();
+            std::expected<void, std::string> make_sync_objects();
         };
     } // namespace engine
 } // namespace arbor

@@ -96,12 +96,18 @@ namespace arbor {
             vkGetSwapchainImagesKHR(vk.device, vk.swapchain.handle, &vk_n, nullptr);
             vk.swapchain.images.resize(vk_n);
             vk.swapchain.image_views.resize(vk_n);
+            vk.swapchain.framebuffers.resize(vk_n);
             vkGetSwapchainImagesKHR(vk.device, vk.swapchain.handle, &vk_n, vk.swapchain.images.data());
 
             m_logger->debug("created a vulkan swapchain with {} images", vk.swapchain.images.size());
 
+            if (m_pipelines.empty())
+                m_pipelines.emplace_back(*this);
+            m_pipelines.back().reload();
+
             for (auto i = 0ull; i < vk.swapchain.image_views.size(); i++) {
                 VkImageViewCreateInfo view_create_info{};
+                VkFramebufferCreateInfo framebuffer_create_info{};
 
                 view_create_info.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
                 view_create_info.image    = vk.swapchain.images[i];
@@ -114,9 +120,31 @@ namespace arbor {
 
                 if (auto res = vkCreateImageView(vk.device, &view_create_info, nullptr, &vk.swapchain.image_views[i]); res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create swapchain image view {}: {}", i, string_VkResult(res)));
+
+                framebuffer_create_info.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+                framebuffer_create_info.renderPass      = m_pipelines.back().render_pass();
+                framebuffer_create_info.attachmentCount = 1;
+                framebuffer_create_info.pAttachments    = &vk.swapchain.image_views[i];
+                framebuffer_create_info.width           = vk.swapchain.extent.width;
+                framebuffer_create_info.height          = vk.swapchain.extent.height;
+                framebuffer_create_info.layers          = 1;
+
+                if (auto res = vkCreateFramebuffer(vk.device, &framebuffer_create_info, nullptr, &vk.swapchain.framebuffers[i]);
+                    res != VK_SUCCESS)
+                    return std::unexpected(fmt::format("failed to create framebuffer {}: {}", i, string_VkResult(res)));
             }
 
             return {};
+        }
+
+        std::expected<uint32_t, std::string> renderer::acquire_image() {
+            uint32_t image_idx;
+            if (auto res = vkAcquireNextImageKHR(vk.device, vk.swapchain.handle, uint64_t(-1),
+                                                 vk.sync.wait_semaphores[vk.sync.current_frame], VK_NULL_HANDLE, &image_idx);
+                res != VK_SUCCESS)
+                return std::unexpected(fmt::format("failed to acquire a swapchain image: {}", string_VkResult(res)));
+
+            return image_idx;
         }
     } // namespace engine
 } // namespace arbor

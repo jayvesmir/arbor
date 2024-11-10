@@ -5,12 +5,10 @@
 namespace arbor {
     namespace engine {
         std::expected<void, std::string> renderer::make_vk_pipeline() {
-            m_pipelines.emplace_back(*this);
-
             m_pipelines.back().bind_shader("src/shaders/basic.vert", shader::vertex);
             m_pipelines.back().bind_shader("src/shaders/basic.frag", shader::fragment);
 
-            if (auto res = m_pipelines.front().reload(); !res)
+            if (auto res = m_pipelines.back().reload(); !res)
                 return res;
 
             return {};
@@ -65,10 +63,18 @@ namespace arbor {
 
                 m_parent.m_logger->debug("creating a vulkan render pass");
 
+                VkSubpassDependency subpass_dependency{};
                 VkSubpassDescription subpass_description{};
                 VkRenderPassCreateInfo render_pass_create_info{};
                 VkAttachmentReference color_attachment_reference{};
                 VkAttachmentDescription color_attachment_description{};
+
+                subpass_dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
+                subpass_dependency.dstSubpass    = 0;
+                subpass_dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                subpass_dependency.srcAccessMask = 0;
+                subpass_dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
                 color_attachment_description.format         = m_parent.vk.swapchain.format.format;
                 color_attachment_description.samples        = VK_SAMPLE_COUNT_1_BIT;
@@ -91,12 +97,17 @@ namespace arbor {
                 render_pass_create_info.pAttachments    = &color_attachment_description;
                 render_pass_create_info.subpassCount    = 1;
                 render_pass_create_info.pSubpasses      = &subpass_description;
+                render_pass_create_info.dependencyCount = 1;
+                render_pass_create_info.pDependencies   = &subpass_dependency;
 
                 if (auto res = vkCreateRenderPass(m_parent.vk.device, &render_pass_create_info, nullptr, &m_render_pass); res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create a vulkan render pass: {}", string_VkResult(res)));
 
                 m_initialized = true;
             }
+
+            if (m_changed_pipeline_stages.empty())
+                return {};
 
             VkGraphicsPipelineCreateInfo pipeline_create_info{};
 

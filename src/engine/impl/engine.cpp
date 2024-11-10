@@ -65,6 +65,14 @@ namespace arbor {
                 auto&& [has_event, window_event] = m_window.poll_event();
                 if (has_event)
                     process_window_event(window_event);
+
+                for (const auto& component : m_components) {
+                    if (auto res = component->update(); !res) {
+                        m_logger->critical("'{}' failed to update: {}", component->identifier(), res.error());
+                        m_running = false;
+                        return res;
+                    }
+                }
             }
 
             return {};

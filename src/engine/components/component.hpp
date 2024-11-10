@@ -33,8 +33,9 @@ namespace arbor {
             constexpr auto type() const { return m_type; }
             constexpr auto identifier() const { return m_identifier; }
 
-            virtual void shutdown()                         = 0;
-            virtual std::expected<void, std::string> init() = 0;
+            virtual void shutdown()                           = 0;
+            virtual std::expected<void, std::string> init()   = 0;
+            virtual std::expected<void, std::string> update() = 0;
         };
     } // namespace engine
 } // namespace arbor
