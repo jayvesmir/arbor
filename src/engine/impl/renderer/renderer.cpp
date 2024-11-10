@@ -4,7 +4,7 @@
 
 namespace arbor {
     namespace engine {
-        renderer::renderer(const engine::instance& parent) : m_parent(parent) {
+        renderer::renderer(engine::instance& parent) : m_parent(parent) {
             m_identifier = "renderer";
             m_type       = etype::renderer;
         }
@@ -94,9 +94,6 @@ namespace arbor {
             if (auto res = make_vk_swapchain(); !res)
                 return res;
 
-            if (auto res = make_vk_pipeline(); !res)
-                return res;
-
             if (auto res = make_vk_command_pool_and_buffer(); !res)
                 return res;
 
@@ -181,7 +178,7 @@ namespace arbor {
 
             if (auto res = vkQueuePresentKHR(vk.present_queue, &vk.sync.present_info); res != VK_SUCCESS) {
                 if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
-                    reload_swapchain();
+                    resize_viewport();
                 else
                     return std::unexpected(fmt::format("failed to present: {}", string_VkResult(res)));
             }
@@ -190,6 +187,11 @@ namespace arbor {
             vk.sync.current_frame %= vk.sync.frames_in_flight;
 
             return {};
+        }
+
+        std::expected<void, std::string> renderer::resize_viewport() {
+            m_parent.window().update_dimensions();
+            return reload_swapchain();
         }
     } // namespace engine
 } // namespace arbor

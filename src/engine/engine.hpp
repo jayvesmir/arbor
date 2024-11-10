@@ -38,6 +38,7 @@ namespace arbor {
             std::expected<void, std::string> start(const engine::application_config& app_config);
 
           protected:
+            constexpr auto& window() { return m_window; }
             constexpr auto& window() const { return m_window; }
 
           private:

@@ -89,7 +89,6 @@ namespace arbor {
             class pipeline {
                 friend class renderer;
                 const engine::renderer& m_parent;
-                bool m_initialized = false;
 
                 VkPipelineLayoutCreateInfo m_pipeline_layout_create_info{};
                 VkPipelineColorBlendAttachmentState m_color_blend_attachment{};
@@ -109,7 +108,7 @@ namespace arbor {
                 VkPipelineLayout m_pipeline_layout;
 
                 std::vector<VkDynamicState> m_dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-                std::vector<VkPipelineShaderStageCreateInfo> m_changed_pipeline_stages;
+                std::vector<VkPipelineShaderStageCreateInfo> m_pipeline_stages;
 
                 std::unordered_map<shader::etype, engine::renderer::shader> m_shaders;
 
@@ -131,7 +130,7 @@ namespace arbor {
             };
 
           private:
-            const engine::instance& m_parent;
+            engine::instance& m_parent;
 
             struct {
                 VkInstance instance = VK_NULL_HANDLE;
@@ -187,7 +186,7 @@ namespace arbor {
             std::vector<renderer::pipeline> m_pipelines;
 
           public:
-            renderer(const engine::instance& parent);
+            renderer(engine::instance& parent);
             ~renderer() { shutdown(); }
 
             renderer(renderer&&)      = delete;
@@ -195,8 +194,9 @@ namespace arbor {
 
             void shutdown() override;
             std::expected<void, std::string> init() override;
-
             std::expected<void, std::string> update() override;
+
+            std::expected<void, std::string> resize_viewport();
 
           private:
             std::expected<uint32_t, std::string> acquire_image();

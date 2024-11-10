@@ -4,7 +4,6 @@
 #include "SDL3/SDL_error.h"
 #include "SDL3/SDL_vulkan.h"
 #include "vulkan/vk_enum_string_helper.h"
-#include "vulkan/vulkan_core.h"
 
 namespace arbor {
     namespace engine {
@@ -18,6 +17,7 @@ namespace arbor {
 
         std::expected<void, std::string> renderer::make_vk_swapchain() {
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk.physical_device.handle, vk.swapchain.surface, &vk.swapchain.surface_capabilities);
+            vk.swapchain.extent = vk.swapchain.surface_capabilities.currentExtent;
 
             uint32_t vk_n = 0;
             std::vector<VkSurfaceFormatKHR> formats;
@@ -60,8 +60,9 @@ namespace arbor {
             else
                 vk.swapchain.present_mode = present_modes.front();
 
-            vk.swapchain.extent.width  = m_parent.window().width();
-            vk.swapchain.extent.height = m_parent.window().height();
+            if (m_pipelines.empty())
+                if (auto res = make_vk_pipeline(); !res)
+                    return res;
 
             VkSwapchainCreateInfoKHR create_info{};
 
@@ -99,11 +100,9 @@ namespace arbor {
             vk.swapchain.framebuffers.resize(vk_n);
             vkGetSwapchainImagesKHR(vk.device, vk.swapchain.handle, &vk_n, vk.swapchain.images.data());
 
-            m_logger->debug("created a vulkan swapchain with {} images", vk.swapchain.images.size());
-
-            if (m_pipelines.empty())
-                m_pipelines.emplace_back(*this);
             m_pipelines.back().reload();
+
+            m_logger->debug("created a vulkan swapchain with {} images", vk.swapchain.images.size());
 
             for (auto i = 0ull; i < vk.swapchain.image_views.size(); i++) {
                 VkImageViewCreateInfo view_create_info{};
@@ -143,7 +142,7 @@ namespace arbor {
                                                  vk.sync.wait_semaphores[vk.sync.current_frame], VK_NULL_HANDLE, &image_idx);
                 res != VK_SUCCESS) {
                 if (res == VK_ERROR_OUT_OF_DATE_KHR) {
-                    reload_swapchain();
+                    resize_viewport();
                     return uint32_t(-1);
                 }
                 return std::unexpected(fmt::format("failed to acquire a swapchain image: {}", string_VkResult(res)));
@@ -153,7 +152,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::reload_swapchain() {
-            m_logger->info("rebuilding swapchain");
+            m_logger->debug("rebuilding swapchain ({}x{})", m_parent.window().width(), m_parent.window().height());
 
             vkDeviceWaitIdle(vk.device);
 

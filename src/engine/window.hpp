@@ -29,7 +29,7 @@ namespace arbor {
             SDL_Window* m_sdl_handle = nullptr;
 
             constexpr static SDL_InitFlags m_init_flags     = SDL_INIT_EVENTS | SDL_INIT_VIDEO;
-            constexpr static SDL_WindowFlags m_window_flags = SDL_WINDOW_VULKAN;
+            constexpr static SDL_WindowFlags m_window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
 
           protected:
             constexpr auto sdl_handle() const { return m_sdl_handle; }
@@ -44,6 +44,7 @@ namespace arbor {
 
             auto poll_event() { return std::pair(SDL_PollEvent(&m_current_event), std::ref(m_current_event)); }
             std::expected<void, std::string> create(int32_t width, int32_t height, const std::string& title);
+            std::expected<void, std::string> update_dimensions();
 
             constexpr auto title() const { return m_title; }
             constexpr auto width() const { return m_width; }

@@ -43,5 +43,11 @@ namespace arbor {
 
             return {};
         }
+
+        std::expected<void, std::string> window::update_dimensions() {
+            if (!SDL_GetWindowSize(m_sdl_handle, &m_width, &m_height))
+                return std::unexpected(fmt::format("failed to update window dimensions: {}", SDL_GetError()));
+            return {};
+        }
     } // namespace engine
 } // namespace arbor

@@ -1,5 +1,6 @@
 #include "engine/engine.hpp"
 #include <chrono>
+#include <ranges>
 #include <thread>
 
 #include "SDL3/SDL_events.h"
@@ -62,8 +63,6 @@ namespace arbor {
             m_running.notify_all();
 
             while (m_running) {
-                auto start = std::chrono::high_resolution_clock::now();
-
                 auto&& [has_event, window_event] = m_window.poll_event();
                 if (has_event)
                     process_window_event(window_event);
@@ -75,9 +74,6 @@ namespace arbor {
                         return res;
                     }
                 }
-                auto end = std::chrono::high_resolution_clock::now();
-
-                m_window.title(fmt::format("{}: {:.03f} fps", "arbor", 1000.0 / ((end - start).count() * 1e-6)));
             }
 
             return {};
@@ -87,6 +83,14 @@ namespace arbor {
             if (event.type == SDL_EVENT_QUIT) {
                 m_running = false;
                 m_running.notify_all();
+            }
+
+            if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+                auto renderer_it = std::ranges::find_if(
+                    m_components, [](const auto& component) { return component->type() == engine::component::etype::renderer; });
+
+                auto renderer = dynamic_cast<engine::renderer*>(renderer_it->get());
+                renderer->resize_viewport();
             }
 
             return {};
