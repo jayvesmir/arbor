@@ -2,7 +2,6 @@
 #include <cstring>
 #include <fstream>
 #include <iterator>
-#include <sys/types.h>
 
 #include "shaderc/shaderc.h"
 #include "shaderc/shaderc.hpp"
