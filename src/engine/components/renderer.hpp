@@ -208,6 +208,7 @@ namespace arbor {
             std::expected<void, std::string> make_vk_swapchain();
             std::expected<void, std::string> make_vk_command_pool_and_buffer();
             std::expected<void, std::string> make_sync_objects();
+            std::expected<void, std::string> reload_swapchain();
         };
     } // namespace engine
 } // namespace arbor

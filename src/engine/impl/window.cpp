@@ -1,5 +1,7 @@
 #include "engine/window.hpp"
 
+#include "SDL3/SDL_video.h"
+
 namespace arbor {
     namespace engine {
         window::~window() {
@@ -31,6 +33,14 @@ namespace arbor {
                 sdl_error("failed to create an SDL window: {}");
 
             m_initialized = true;
+            return {};
+        }
+
+        std::expected<void, std::string> window::title(const std::string& new_title) {
+            m_title = new_title;
+            if (!SDL_SetWindowTitle(m_sdl_handle, m_title.c_str()))
+                return std::unexpected(fmt::format("failed to change the title of the window: {}", SDL_GetError()));
+
             return {};
         }
     } // namespace engine

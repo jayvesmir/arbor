@@ -112,12 +112,15 @@ namespace arbor {
             VkCommandBufferBeginInfo cmd_buffer_begin_info{};
 
             vkWaitForFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame], VK_TRUE, uint64_t(-1));
-            vkResetFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame]);
 
             auto image_idx = acquire_image();
             if (!image_idx)
                 return std::unexpected(image_idx.error());
 
+            if (*image_idx == uint32_t(-1))
+                return {};
+
+            vkResetFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame]);
             vkResetCommandBuffer(vk.command_buffers[vk.sync.current_frame], 0);
 
             cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -176,8 +179,12 @@ namespace arbor {
             vk.sync.present_info.pSwapchains        = &vk.swapchain.handle;
             vk.sync.present_info.pImageIndices      = &*image_idx;
 
-            if (auto res = vkQueuePresentKHR(vk.present_queue, &vk.sync.present_info); res != VK_SUCCESS)
-                return std::unexpected(fmt::format("failed to present: {}", string_VkResult(res)));
+            if (auto res = vkQueuePresentKHR(vk.present_queue, &vk.sync.present_info); res != VK_SUCCESS) {
+                if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
+                    reload_swapchain();
+                else
+                    return std::unexpected(fmt::format("failed to present: {}", string_VkResult(res)));
+            }
 
             vk.sync.current_frame++;
             vk.sync.current_frame %= vk.sync.frames_in_flight;

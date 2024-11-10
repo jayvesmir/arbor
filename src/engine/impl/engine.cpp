@@ -62,6 +62,8 @@ namespace arbor {
             m_running.notify_all();
 
             while (m_running) {
+                auto start = std::chrono::high_resolution_clock::now();
+
                 auto&& [has_event, window_event] = m_window.poll_event();
                 if (has_event)
                     process_window_event(window_event);
@@ -73,6 +75,9 @@ namespace arbor {
                         return res;
                     }
                 }
+                auto end = std::chrono::high_resolution_clock::now();
+
+                m_window.title(fmt::format("{}: {:.03f} fps", "arbor", 1000.0 / ((end - start).count() * 1e-6)));
             }
 
             return {};

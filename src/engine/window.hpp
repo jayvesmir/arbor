@@ -48,6 +48,7 @@ namespace arbor {
             constexpr auto title() const { return m_title; }
             constexpr auto width() const { return m_width; }
             constexpr auto height() const { return m_height; }
+            std::expected<void, std::string> title(const std::string& new_title);
         };
     } // namespace engine
 } // namespace arbor

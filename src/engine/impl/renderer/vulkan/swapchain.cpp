@@ -141,10 +141,38 @@ namespace arbor {
             uint32_t image_idx;
             if (auto res = vkAcquireNextImageKHR(vk.device, vk.swapchain.handle, uint64_t(-1),
                                                  vk.sync.wait_semaphores[vk.sync.current_frame], VK_NULL_HANDLE, &image_idx);
-                res != VK_SUCCESS)
+                res != VK_SUCCESS) {
+                if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+                    reload_swapchain();
+                    return uint32_t(-1);
+                }
                 return std::unexpected(fmt::format("failed to acquire a swapchain image: {}", string_VkResult(res)));
+            }
 
             return image_idx;
+        }
+
+        std::expected<void, std::string> renderer::reload_swapchain() {
+            m_logger->info("rebuilding swapchain");
+
+            vkDeviceWaitIdle(vk.device);
+
+            for (auto& framebuffer : vk.swapchain.framebuffers) {
+                if (framebuffer && vk.device)
+                    vkDestroyFramebuffer(vk.device, framebuffer, nullptr);
+                framebuffer = VK_NULL_HANDLE;
+            }
+
+            for (auto& image_view : vk.swapchain.image_views) {
+                if (image_view && vk.device)
+                    vkDestroyImageView(vk.device, image_view, nullptr);
+                image_view = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.handle && vk.device)
+                vkDestroySwapchainKHR(vk.device, vk.swapchain.handle, nullptr);
+
+            return make_vk_swapchain();
         }
     } // namespace engine
 } // namespace arbor
