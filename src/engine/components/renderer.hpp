@@ -10,6 +10,7 @@
 #include "engine/components/component.hpp"
 #include "engine/engine.hpp"
 #include "engine/logger_utils.hpp"
+#include "engine/model.hpp"
 #include "engine/window.hpp"
 
 #include "vulkan/vulkan.h"
@@ -168,6 +169,9 @@ namespace arbor {
                 VkCommandPool command_pool = VK_NULL_HANDLE;
                 std::vector<VkCommandBuffer> command_buffers;
 
+                VkBuffer vertex_buffer              = VK_NULL_HANDLE;
+                VkDeviceMemory vertex_buffer_memory = VK_NULL_HANDLE;
+
                 struct {
                     const uint32_t frames_in_flight = 1;
 
@@ -184,6 +188,12 @@ namespace arbor {
             } vk;
 
             std::vector<renderer::pipeline> m_pipelines;
+
+            const std::vector<engine::vertex_2d> m_test_vertices = {
+                {{0.0f, -0.5f}, {1.0f, 0.5f, 0.5f}},
+                {{0.5f, 0.5}, {0.5f, 1.0f, 0.5f}},
+                {{-0.5f, 0.5f}, {0.5f, 0.5f, 1.0f}},
+            };
 
           public:
             renderer(engine::instance& parent);
@@ -208,6 +218,7 @@ namespace arbor {
             std::expected<void, std::string> make_vk_swapchain();
             std::expected<void, std::string> make_vk_command_pool_and_buffer();
             std::expected<void, std::string> make_sync_objects();
+            std::expected<void, std::string> make_vertex_buffer();
             std::expected<void, std::string> reload_swapchain();
         };
     } // namespace engine

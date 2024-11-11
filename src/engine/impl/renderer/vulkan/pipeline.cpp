@@ -44,7 +44,13 @@ namespace arbor {
             m_dynamic_state.dynamicStateCount = m_dynamic_states.size();
             m_dynamic_state.pDynamicStates    = m_dynamic_states.data();
 
-            m_vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            auto&& [vertex_binding, vertex_attributes] = m_parent.m_test_vertices[0].make_vk_binding();
+
+            m_vertex_input_state.sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            m_vertex_input_state.vertexBindingDescriptionCount   = 1;
+            m_vertex_input_state.pVertexBindingDescriptions      = &vertex_binding;
+            m_vertex_input_state.vertexAttributeDescriptionCount = vertex_attributes.size();
+            m_vertex_input_state.pVertexAttributeDescriptions    = vertex_attributes.data();
 
             m_input_assembly_state.sType    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
             m_input_assembly_state.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;

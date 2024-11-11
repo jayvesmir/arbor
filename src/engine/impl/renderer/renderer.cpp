@@ -13,6 +13,12 @@ namespace arbor {
             if (vk.device)
                 vkDeviceWaitIdle(vk.device);
 
+            if (vk.vertex_buffer && vk.device)
+                vkDestroyBuffer(vk.device, vk.vertex_buffer, nullptr);
+
+            if (vk.vertex_buffer_memory && vk.device)
+                vkFreeMemory(vk.device, vk.vertex_buffer_memory, nullptr);
+
             m_pipelines.clear();
 
             for (auto i = 0ull; i < vk.sync.frames_in_flight; i++) {
@@ -94,6 +100,9 @@ namespace arbor {
             if (auto res = make_vk_swapchain(); !res)
                 return res;
 
+            if (auto res = make_vertex_buffer(); !res)
+                return res;
+
             if (auto res = make_vk_command_pool_and_buffer(); !res)
                 return res;
 
@@ -143,6 +152,10 @@ namespace arbor {
 
             vkCmdBindPipeline(vk.command_buffers[vk.sync.current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS,
                               m_pipelines.back().pipeline_handle());
+
+            VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers(vk.command_buffers[vk.sync.current_frame], 0, 1, &vk.vertex_buffer, &offset);
+
             vkCmdSetViewport(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().viewports());
             vkCmdSetScissor(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().scissors());
 
