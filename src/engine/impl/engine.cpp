@@ -63,9 +63,8 @@ namespace arbor {
             m_running.notify_all();
 
             while (m_running) {
-                auto&& [has_event, window_event] = m_window.poll_event();
-                if (has_event)
-                    process_window_event(window_event);
+                while (m_window.poll_event().first)
+                    process_window_event(m_window.current_event());
 
                 for (const auto& component : m_components) {
                     if (auto res = component->update(); !res) {
