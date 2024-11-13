@@ -142,7 +142,8 @@ namespace arbor {
                 std::expected<void, std::string> make(uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                                                       VkDevice device, VkPhysicalDevice physical_device);
 
-                std::expected<void, std::string> write_data(const void* bytes, uint64_t size, VkQueue transfer_queue = VK_NULL_HANDLE, VkCommandPool command_pool = VK_NULL_HANDLE);
+                std::expected<void, std::string> write_data(const void* bytes, uint64_t size, VkQueue transfer_queue = VK_NULL_HANDLE,
+                                                            VkCommandPool command_pool = VK_NULL_HANDLE);
 
                 void free();
 
@@ -189,6 +190,7 @@ namespace arbor {
                 VkCommandPool command_pool = VK_NULL_HANDLE;
                 std::vector<VkCommandBuffer> command_buffers;
 
+                renderer::device_buffer index_buffer;
                 renderer::device_buffer vertex_buffer;
 
                 struct {
@@ -209,10 +211,14 @@ namespace arbor {
             std::vector<renderer::pipeline> m_pipelines;
 
             const std::vector<engine::vertex_2d> m_test_vertices = {
-                {{0.0f, -0.5f}, {1.0f, 0.0f, 0.25f}},
-                {{0.5f, 0.5}, {0.0f, 0.0f, 1.0f}},
-                {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-                {{0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},
+                {{-0.5f, -0.5f}, {1.0f, 0.25f, 0.25f}},
+                {{0.5f, 0.5f}, {0.25f, 1.0f, 0.25f}},
+                {{0.5f, -0.5f}, {0.25f, 0.25f, 1.0f}},
+                {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+            };
+
+            const std::vector<uint32_t> m_test_indices = {
+                0, 2, 1, 1, 3, 0,
             };
 
           public:
@@ -237,8 +243,10 @@ namespace arbor {
             std::expected<void, std::string> make_vk_swapchain();
             std::expected<void, std::string> make_vk_command_pool_and_buffer();
             std::expected<void, std::string> make_sync_objects();
-            std::expected<void, std::string> make_vertex_buffer();
             std::expected<void, std::string> reload_swapchain();
+
+            std::expected<void, std::string> make_vertex_buffer();
+            std::expected<void, std::string> make_index_buffer();
         };
     } // namespace engine
 } // namespace arbor

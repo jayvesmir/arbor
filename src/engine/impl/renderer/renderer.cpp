@@ -14,6 +14,7 @@ namespace arbor {
                 vkDeviceWaitIdle(vk.device);
 
             vk.vertex_buffer.free();
+            vk.index_buffer.free();
 
             m_pipelines.clear();
 
@@ -99,6 +100,9 @@ namespace arbor {
             if (auto res = make_vertex_buffer(); !res)
                 return res;
 
+            if (auto res = make_index_buffer(); !res)
+                return res;
+
             if (auto res = make_vk_command_pool_and_buffer(); !res)
                 return res;
 
@@ -151,11 +155,12 @@ namespace arbor {
 
             VkDeviceSize offset = 0;
             vkCmdBindVertexBuffers(vk.command_buffers[vk.sync.current_frame], 0, 1, vk.vertex_buffer.buffer(), &offset);
+            vkCmdBindIndexBuffer(vk.command_buffers[vk.sync.current_frame], *vk.index_buffer.buffer(), 0, VK_INDEX_TYPE_UINT32);
 
             vkCmdSetViewport(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().viewports());
             vkCmdSetScissor(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().scissors());
 
-            vkCmdDraw(vk.command_buffers[vk.sync.current_frame], 3, 1, 0, 0);
+            vkCmdDrawIndexed(vk.command_buffers[vk.sync.current_frame], m_test_indices.size(), 1, 0, 0, 0);
 
             vkCmdEndRenderPass(vk.command_buffers[vk.sync.current_frame]);
 

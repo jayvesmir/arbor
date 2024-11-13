@@ -133,7 +133,7 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_vertex_buffer() {
             auto size = m_test_vertices.size() * sizeof(m_test_vertices[0]);
 
-            m_logger->trace("allocating vertex buffer of {} vertices ({} bytes)", m_test_vertices.size(), size);
+            m_logger->trace("allocating a vertex buffer of {} vertices ({} bytes)", m_test_vertices.size(), size);
 
             if (auto res = vk.vertex_buffer.make(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vk.device,
@@ -142,6 +142,23 @@ namespace arbor {
                 return res;
 
             if (auto res = vk.vertex_buffer.write_data(m_test_vertices.data(), size, vk.graphics_queue, vk.command_pool); !res)
+                return res;
+
+            return {};
+        }
+
+        std::expected<void, std::string> renderer::make_index_buffer() {
+            auto size = m_test_indices.size() * sizeof(m_test_indices[0]);
+
+            m_logger->trace("allocating an index buffer of {} vertices ({} bytes)", m_test_indices.size(), size);
+
+            if (auto res = vk.index_buffer.make(size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vk.device,
+                                                vk.physical_device.handle);
+                !res)
+                return res;
+
+            if (auto res = vk.index_buffer.write_data(m_test_indices.data(), size, vk.graphics_queue, vk.command_pool); !res)
                 return res;
 
             return {};

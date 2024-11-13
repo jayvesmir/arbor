@@ -45,7 +45,7 @@ namespace arbor {
             });
 
             auto present_mode = std::ranges::find_if(present_modes, [](const VkPresentModeKHR& mode) {
-                if (mode == VK_PRESENT_MODE_FIFO_KHR)
+                if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
                     return true;
                 return false;
             });
