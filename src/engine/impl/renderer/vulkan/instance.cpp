@@ -42,8 +42,8 @@ namespace arbor {
             vk.instance_lay.push_back("VK_LAYER_KHRONOS_validation");
 #endif
 
-            m_logger->debug("creating a vulkan instance with {} extensions: {}", vk.instance_ext.size(), fmt::join(vk.instance_ext, ", "));
-            m_logger->debug("and {} layers: {}", vk.instance_lay.size(), fmt::join(vk.instance_lay, ", "));
+            m_logger->trace("creating a vulkan instance with {} extensions: {}", vk.instance_ext.size(), fmt::join(vk.instance_ext, ", "));
+            m_logger->trace("and {} layers: {}", vk.instance_lay.size(), fmt::join(vk.instance_lay, ", "));
 
             app_info.apiVersion         = VK_API_VERSION_1_3;
             app_info.pEngineName        = "arbor";
@@ -61,7 +61,7 @@ namespace arbor {
                 return std::unexpected(fmt::format("failed to create a vulkan instance: {}", string_VkResult(res)));
 
 #ifndef NDEBUG
-            m_logger->debug("creating a debug messenger");
+            m_logger->trace("creating a debug messenger");
 
             VkDebugUtilsMessengerCreateInfoEXT messenger_create_info{};
 

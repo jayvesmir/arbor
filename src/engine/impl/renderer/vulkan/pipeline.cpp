@@ -29,7 +29,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::pipeline::reload() {
-            m_parent.m_logger->debug("creating a vulkan pipeline layout");
+            m_parent.m_logger->trace("creating a vulkan pipeline layout");
 
             if (m_pipeline_layout)
                 vkDestroyPipelineLayout(m_parent.vk.device, m_pipeline_layout, nullptr);
@@ -78,7 +78,7 @@ namespace arbor {
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to create a pipeline layout: {}", string_VkResult(res)));
 
-            m_parent.m_logger->debug("creating a vulkan render pass");
+            m_parent.m_logger->trace("creating a vulkan render pass");
 
             VkSubpassDependency subpass_dependency{};
             VkSubpassDescription subpass_description{};
@@ -122,7 +122,7 @@ namespace arbor {
 
             VkGraphicsPipelineCreateInfo pipeline_create_info{};
 
-            m_parent.m_logger->debug("creating a vulkan pipeline with {} stages", m_pipeline_stages.size());
+            m_parent.m_logger->trace("creating a vulkan pipeline with {} stages", m_pipeline_stages.size());
 
             m_viewport.maxDepth = 1.0f;
             m_viewport.width    = m_parent.vk.swapchain.extent.width;
@@ -166,7 +166,7 @@ namespace arbor {
 
             m_shaders[type] = {glsl_source, type, m_parent.vk.device};
 
-            m_parent.m_logger->debug("binding glsl shader: {}", m_shaders[type].source().c_str());
+            m_parent.m_logger->trace("binding glsl shader: {}", m_shaders[type].source().c_str());
             if (auto res = m_shaders[type].compile(); !res)
                 return res;
 

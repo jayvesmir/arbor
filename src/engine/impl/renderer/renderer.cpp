@@ -81,8 +81,8 @@ namespace arbor {
 
         std::expected<void, std::string> renderer::init() {
             initialize_component_logger();
-            m_logger->debug("parent: {}", fmt::ptr(&m_parent));
-            m_logger->debug("parent window: {}", fmt::ptr(&m_parent.window()));
+            m_logger->trace("parent: {}", fmt::ptr(&m_parent));
+            m_logger->trace("parent window: {}", fmt::ptr(&m_parent.window()));
 
             if (auto res = make_vk_instance(); !res)
                 return res;

@@ -112,8 +112,8 @@ namespace arbor {
             create_info.ppEnabledLayerNames     = vk.device_lay.data();
             create_info.ppEnabledExtensionNames = vk.device_ext.data();
 
-            m_logger->debug("creating a vulkan device with {} extensions: {}", vk.device_ext.size(), fmt::join(vk.device_ext, ", "));
-            m_logger->debug("{} layers: {}", vk.device_lay.size(), fmt::join(vk.device_lay, ", "));
+            m_logger->trace("creating a vulkan device with {} extensions: {}", vk.device_ext.size(), fmt::join(vk.device_ext, ", "));
+            m_logger->trace("{} layers: {}", vk.device_lay.size(), fmt::join(vk.device_lay, ", "));
 
             if (auto res = vkCreateDevice(vk.physical_device.handle, &create_info, nullptr, &vk.device); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to create a vulkan device: {}", string_VkResult(res)));

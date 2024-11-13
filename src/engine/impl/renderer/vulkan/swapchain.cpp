@@ -8,7 +8,7 @@
 namespace arbor {
     namespace engine {
         std::expected<void, std::string> renderer::make_vk_surface() {
-            m_logger->debug("creating a window surface");
+            m_logger->trace("creating a window surface");
             if (!SDL_Vulkan_CreateSurface(m_parent.window().sdl_handle(), vk.instance, nullptr, &vk.swapchain.surface))
                 return std::unexpected(fmt::format("failed to create window surface: {}", SDL_GetError()));
 
@@ -102,7 +102,7 @@ namespace arbor {
 
             m_pipelines.back().reload();
 
-            m_logger->debug("created a vulkan swapchain with {} images", vk.swapchain.images.size());
+            m_logger->trace("created a vulkan swapchain with {} images", vk.swapchain.images.size());
 
             for (auto i = 0ull; i < vk.swapchain.image_views.size(); i++) {
                 VkImageViewCreateInfo view_create_info{};
@@ -152,7 +152,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::reload_swapchain() {
-            m_logger->debug("rebuilding swapchain ({}x{})", m_parent.window().width(), m_parent.window().height());
+            m_logger->trace("rebuilding swapchain ({}x{})", m_parent.window().width(), m_parent.window().height());
 
             vkDeviceWaitIdle(vk.device);
 

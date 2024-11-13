@@ -14,7 +14,7 @@ namespace arbor {
 
         instance::~instance() {
             for (auto& component : m_components) {
-                m_logger->info("destroying '{}'", component->identifier());
+                m_logger->debug("destroying '{}'", component->identifier());
                 component->shutdown();
             }
         }
@@ -22,7 +22,7 @@ namespace arbor {
         std::expected<void, std::string> instance::create_window(int32_t width, int32_t height, const std::string& title) {
             const auto res = m_window.create(width, height, title);
             if (res)
-                m_logger->debug("created a window ('{}' {}x{})", m_window.title(), m_window.width(), m_window.height());
+                m_logger->trace("created a window ('{}' {}x{})", m_window.title(), m_window.width(), m_window.height());
             else
                 m_logger->critical("failed to create a window ('{}' {}x{}):\n\t{}", title, width, height, res.error());
 
@@ -31,7 +31,7 @@ namespace arbor {
 
         std::expected<void, std::string> instance::initialize_components() {
             for (auto& component : m_components) {
-                m_logger->info("initializing '{}'", component->identifier());
+                m_logger->debug("initializing '{}'", component->identifier());
 
                 if (auto res = component->init(); !res) {
                     m_logger->critical("failed to initialize the '{}' subsystem:\n\t{}", component->identifier(), res.error());

@@ -74,12 +74,14 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::make_vertex_buffer() {
-            if (auto res = vk.vertex_buffer.make(m_test_vertices.size() * sizeof(m_test_vertices[0]), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                 vk.device, vk.physical_device.handle);
-                !res)
+            auto size = m_test_vertices.size() * sizeof(m_test_vertices[0]);
+
+            m_logger->trace("allocating vertex buffer of {} vertices ({} bytes)", m_test_vertices.size(), size);
+
+            if (auto res = vk.vertex_buffer.make(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, vk.device, vk.physical_device.handle); !res)
                 return res;
 
-            if (auto res = vk.vertex_buffer.write_data(m_test_vertices.data(), m_test_vertices.size() * sizeof(m_test_vertices[0])); !res)
+            if (auto res = vk.vertex_buffer.write_data(m_test_vertices.data(), size); !res)
                 return res;
 
             return {};

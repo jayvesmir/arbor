@@ -10,7 +10,7 @@ namespace arbor {
 
             vk.command_buffers.resize(vk.sync.frames_in_flight);
 
-            m_logger->debug("creating a vulkan command pool & allocating command buffers");
+            m_logger->trace("creating a vulkan command pool & allocating command buffers");
 
             pool_create_info.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
             pool_create_info.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
