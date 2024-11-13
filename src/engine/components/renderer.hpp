@@ -130,6 +130,24 @@ namespace arbor {
                 constexpr auto pipeline_handle() const { return m_pipeline; }
             };
 
+            class device_buffer {
+                VkDevice m_device;
+
+                VkBuffer m_buffer       = VK_NULL_HANDLE;
+                VkDeviceMemory m_memory = VK_NULL_HANDLE;
+
+              public:
+                std::expected<void, std::string> make(uint64_t size, VkBufferUsageFlags usage, VkDevice device,
+                                                      VkPhysicalDevice physical_device);
+
+                std::expected<void, std::string> write_data(const void* bytes, uint64_t size);
+
+                void free();
+
+                constexpr auto buffer() const { return &m_buffer; }
+                constexpr auto memory() const { return &m_memory; }
+            };
+
           private:
             engine::instance& m_parent;
 
@@ -169,8 +187,7 @@ namespace arbor {
                 VkCommandPool command_pool = VK_NULL_HANDLE;
                 std::vector<VkCommandBuffer> command_buffers;
 
-                VkBuffer vertex_buffer              = VK_NULL_HANDLE;
-                VkDeviceMemory vertex_buffer_memory = VK_NULL_HANDLE;
+                renderer::device_buffer vertex_buffer;
 
                 struct {
                     const uint32_t frames_in_flight = 1;
@@ -190,14 +207,13 @@ namespace arbor {
             std::vector<renderer::pipeline> m_pipelines;
 
             const std::vector<engine::vertex_2d> m_test_vertices = {
-                {{0.0f, -0.5f}, {1.0f, 0.5f, 0.5f}},
-                {{0.5f, 0.5}, {0.5f, 1.0f, 0.5f}},
-                {{-0.5f, 0.5f}, {0.5f, 0.5f, 1.0f}},
+                {{0.0f, -0.5f}, {1.0f, 0.0f, 0.25f}},
+                {{0.5f, 0.5}, {0.0f, 1.0f, 0.25f}},
+                {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
             };
 
           public:
             renderer(engine::instance& parent);
-            ~renderer() { shutdown(); }
 
             renderer(renderer&&)      = delete;
             renderer(const renderer&) = delete;

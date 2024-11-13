@@ -13,11 +13,7 @@ namespace arbor {
             if (vk.device)
                 vkDeviceWaitIdle(vk.device);
 
-            if (vk.vertex_buffer && vk.device)
-                vkDestroyBuffer(vk.device, vk.vertex_buffer, nullptr);
-
-            if (vk.vertex_buffer_memory && vk.device)
-                vkFreeMemory(vk.device, vk.vertex_buffer_memory, nullptr);
+            vk.vertex_buffer.free();
 
             m_pipelines.clear();
 
@@ -154,7 +150,7 @@ namespace arbor {
                               m_pipelines.back().pipeline_handle());
 
             VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers(vk.command_buffers[vk.sync.current_frame], 0, 1, &vk.vertex_buffer, &offset);
+            vkCmdBindVertexBuffers(vk.command_buffers[vk.sync.current_frame], 0, 1, vk.vertex_buffer.buffer(), &offset);
 
             vkCmdSetViewport(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().viewports());
             vkCmdSetScissor(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().scissors());
