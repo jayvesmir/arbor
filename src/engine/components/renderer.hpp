@@ -132,15 +132,17 @@ namespace arbor {
 
             class device_buffer {
                 VkDevice m_device;
+                VkPhysicalDevice m_physical_device;
 
                 VkBuffer m_buffer       = VK_NULL_HANDLE;
                 VkDeviceMemory m_memory = VK_NULL_HANDLE;
 
               public:
-                std::expected<void, std::string> make(uint64_t size, VkBufferUsageFlags usage, VkDevice device,
-                                                      VkPhysicalDevice physical_device);
+                ~device_buffer();
+                std::expected<void, std::string> make(uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                                                      VkDevice device, VkPhysicalDevice physical_device);
 
-                std::expected<void, std::string> write_data(const void* bytes, uint64_t size);
+                std::expected<void, std::string> write_data(const void* bytes, uint64_t size, VkQueue transfer_queue = VK_NULL_HANDLE, VkCommandPool command_pool = VK_NULL_HANDLE);
 
                 void free();
 
