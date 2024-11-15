@@ -1,10 +1,10 @@
-#include "engine/engine.hpp"
+#include "arbor/engine.hpp"
 #include <chrono>
 #include <ranges>
 #include <thread>
 
 #include "SDL3/SDL_events.h"
-#include "engine/components/renderer.hpp"
+#include "arbor/components/renderer.hpp"
 
 namespace arbor {
     namespace engine {

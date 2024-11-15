@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include "engine/types.hpp"
+#include "arbor/types.hpp"
 
 namespace arbor {
     namespace engine {

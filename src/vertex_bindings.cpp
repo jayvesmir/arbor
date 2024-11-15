@@ -1,4 +1,4 @@
-#include "engine/model.hpp"
+#include "arbor/model.hpp"
 
 namespace arbor {
     namespace engine {

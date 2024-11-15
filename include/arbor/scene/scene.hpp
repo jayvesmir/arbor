@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/scene/object.hpp"
+#include "arbor/scene/object.hpp"
 
 #include <filesystem>
 #include <string>

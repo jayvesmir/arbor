@@ -9,12 +9,12 @@
 #include "SDL3/SDL_events.h"
 #include "spdlog/spdlog.h"
 
-#include "engine/application.hpp"
-#include "engine/components/components.hpp"
-#include "engine/logger_utils.hpp"
-#include "engine/scene/scene.hpp"
-#include "engine/types.hpp"
-#include "engine/window.hpp"
+#include "arbor/application.hpp"
+#include "arbor/components/components.hpp"
+#include "arbor/logger_utils.hpp"
+#include "arbor/scene/scene.hpp"
+#include "arbor/types.hpp"
+#include "arbor/window.hpp"
 
 namespace arbor {
     namespace engine {

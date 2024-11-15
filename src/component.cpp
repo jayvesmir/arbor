@@ -1,4 +1,4 @@
-#include "engine/components/component.hpp"
+#include "arbor/components/component.hpp"
 
 namespace arbor {
     namespace engine {

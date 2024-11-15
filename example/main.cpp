@@ -1,6 +1,6 @@
 #include "spdlog/spdlog.h"
 
-#include "engine/engine.hpp"
+#include "arbor/engine.hpp"
 
 int32_t main(int32_t argc, char** argv) {
     arbor::engine::instance engine;

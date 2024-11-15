@@ -1,8 +1,8 @@
 #pragma once
-#include "engine/types.hpp"
+#include "arbor/components/component.hpp"
 
 namespace arbor {
     namespace engine {
-        class object {};
+        class renderer;
     } // namespace engine
 } // namespace arbor
