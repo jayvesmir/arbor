@@ -3,15 +3,17 @@
 #include <expected>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "SDL3/SDL_events.h"
 #include "spdlog/spdlog.h"
 
-#include "arbor.hpp"
 #include "engine/application.hpp"
 #include "engine/components/components.hpp"
 #include "engine/logger_utils.hpp"
+#include "engine/scene/scene.hpp"
+#include "engine/types.hpp"
 #include "engine/window.hpp"
 
 namespace arbor {
@@ -27,6 +29,8 @@ namespace arbor {
             std::vector<std::unique_ptr<engine::component>> m_components;
 
             std::atomic<bool> m_running;
+            std::unordered_map<std::string, engine::scene> m_scenes;
+            std::optional<std::unordered_map<std::string, engine::scene>::const_iterator> m_current_scene;
 
           public:
             instance();
@@ -35,7 +39,11 @@ namespace arbor {
             instance(instance&&)      = delete;
             instance(const instance&) = delete;
 
-            std::expected<void, std::string> start(const engine::application_config& app_config);
+            std::expected<void, std::string> run(const engine::application_config& app_config);
+            std::expected<void, std::string> push_scene_and_set_current(const engine::scene& scene);
+
+            constexpr auto& scenes() const { return m_scenes; }
+            auto& current_scene() const { return (m_current_scene.value_or(m_scenes.begin()))->second; }
 
           protected:
             constexpr auto& window() { return m_window; }

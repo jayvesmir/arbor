@@ -6,11 +6,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "arbor.hpp"
 #include "engine/components/component.hpp"
 #include "engine/engine.hpp"
 #include "engine/logger_utils.hpp"
 #include "engine/model.hpp"
+#include "engine/types.hpp"
 #include "engine/window.hpp"
 
 #include "vulkan/vulkan.h"

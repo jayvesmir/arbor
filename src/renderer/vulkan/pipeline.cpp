@@ -8,8 +8,11 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_vk_pipeline() {
             m_pipelines.emplace_back(*this);
 
-            m_pipelines.back().bind_shader("src/shaders/basic.vert", shader::vertex);
-            m_pipelines.back().bind_shader("src/shaders/basic.frag", shader::fragment);
+            if (auto res = m_pipelines.back().bind_shader(m_parent.current_scene().vertex_shader(), shader::vertex); !res)
+                return res;
+
+            if (auto res = m_pipelines.back().bind_shader(m_parent.current_scene().fragment_shader(), shader::fragment); !res)
+                return res;
 
             if (auto res = m_pipelines.back().reload(); !res)
                 return res;

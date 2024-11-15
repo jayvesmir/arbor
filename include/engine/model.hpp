@@ -2,7 +2,7 @@
 #include <array>
 #include <string>
 
-#include "arbor.hpp"
+#include "engine/types.hpp"
 
 #include "glm/glm.hpp"
 #include "vulkan/vulkan.h"

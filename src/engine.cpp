@@ -51,10 +51,19 @@ namespace arbor {
             return {};
         }
 
-        std::expected<void, std::string> instance::start(const engine::application_config& app_config) {
+        std::expected<void, std::string> instance::push_scene_and_set_current(const engine::scene& scene) {
+            m_scenes.emplace(scene.name(), scene);
+            m_current_scene = m_scenes.find(scene.name());
+            return {};
+        }
+
+        std::expected<void, std::string> instance::run(const engine::application_config& app_config) {
             m_config = app_config;
             if (auto res = create_app(); !res)
                 return res;
+
+            if (!m_current_scene || !m_scenes.contains(current_scene().name()))
+                return std::unexpected("failed to run arbor: no scene loaded");
 
             if (auto res = initialize_components(); !res)
                 return res;

@@ -5,8 +5,8 @@
 
 #include "spdlog/spdlog.h"
 
-#include "arbor.hpp"
 #include "engine/logger_utils.hpp"
+#include "engine/types.hpp"
 
 namespace arbor {
     namespace engine {
