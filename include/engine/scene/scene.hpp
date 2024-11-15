@@ -42,7 +42,3 @@ namespace arbor {
         };
     } // namespace engine
 } // namespace arbor
-
-template <> struct ::std::hash<arbor::engine::scene> {
-    std::size_t operator()(const arbor::engine::scene& scene) const;
-};

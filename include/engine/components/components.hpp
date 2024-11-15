@@ -1,5 +1,4 @@
 #pragma once
-
 #include "engine/components/component.hpp"
 
 namespace arbor {
