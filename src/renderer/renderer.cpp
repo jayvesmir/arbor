@@ -204,7 +204,13 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::resize_viewport() {
+            auto old_width  = m_parent.window().width();
+            auto old_height = m_parent.window().height();
             m_parent.window().update_dimensions();
+
+            if (old_width == m_parent.window().width() && old_height == m_parent.window().height())
+                return {};
+
             return reload_swapchain();
         }
     } // namespace engine
