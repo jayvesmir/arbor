@@ -37,7 +37,7 @@ namespace arbor {
             options.SetOptimizationLevel(shaderc_optimization_level_zero);
 #endif
 
-            auto res = compiler.CompileGlslToSpv(m_glsl, type_translation_map[m_type], m_source.c_str());
+            auto res = compiler.CompileGlslToSpv(m_glsl, type_translation_map[m_type], m_source.string().c_str());
             if (res.GetCompilationStatus() != shaderc_compilation_status_success)
                 return std::unexpected(res.GetErrorMessage());
 

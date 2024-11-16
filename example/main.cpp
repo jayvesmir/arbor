@@ -1,5 +1,3 @@
-#include "spdlog/spdlog.h"
-
 #include "arbor/engine.hpp"
 
 int32_t main(int32_t argc, char** argv) {

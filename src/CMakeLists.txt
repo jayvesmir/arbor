@@ -6,11 +6,11 @@ file(GLOB_RECURSE ENGINE_SOURCES
 set(CMAKE_CXX_STANDARD 23)
 
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME}
     PUBLIC
         ${ENGINE_SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_external)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_external)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)

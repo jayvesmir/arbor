@@ -169,7 +169,7 @@ namespace arbor {
 
             m_shaders[type] = {glsl_source, type, m_parent.vk.device};
 
-            m_parent.m_logger->trace("binding glsl shader: {}", m_shaders[type].source().c_str());
+            m_parent.m_logger->trace("binding glsl shader: {}", m_shaders[type].source().string().c_str());
             if (auto res = m_shaders[type].compile(); !res)
                 return res;
 

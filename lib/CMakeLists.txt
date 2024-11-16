@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
 
-set(BUILD_SHARED_LIBS false)
-
 option(SPDLOG_FMT_EXTERNAL "" true)
 
 option(SDL_SHARED "" false)

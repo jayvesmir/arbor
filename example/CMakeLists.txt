@@ -11,4 +11,4 @@ target_sources(${PROJECT_NAME}_example
         ${SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME}_example PRIVATE ${PROJECT_NAME}_external ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_example PRIVATE ${PROJECT_NAME})

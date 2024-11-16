@@ -101,12 +101,12 @@ namespace arbor {
                 VkPipelineColorBlendStateCreateInfo m_color_blend_state{};
                 VkPipelineInputAssemblyStateCreateInfo m_input_assembly_state{};
 
-                VkRect2D m_scissor;
-                VkViewport m_viewport;
+                VkRect2D m_scissor{};
+                VkViewport m_viewport{};
 
-                VkPipeline m_pipeline;
-                VkRenderPass m_render_pass;
-                VkPipelineLayout m_pipeline_layout;
+                VkPipeline m_pipeline = VK_NULL_HANDLE;
+                VkRenderPass m_render_pass = VK_NULL_HANDLE;
+                VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
 
                 std::vector<VkDynamicState> m_dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
                 std::vector<VkPipelineShaderStageCreateInfo> m_pipeline_stages;
