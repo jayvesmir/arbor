@@ -1,5 +1,6 @@
 #include "arbor/components/renderer.hpp"
 
+#include "arbor/model.hpp"
 #include "vulkan/vk_enum_string_helper.h"
 #include <vulkan/vulkan_core.h>
 
@@ -46,20 +47,16 @@ namespace arbor {
             if (auto res = vkBindBufferMemory(m_device, m_buffer, m_memory, 0); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to bind buffer memory: {}", string_VkResult(res)));
 
+            if (auto res = vkMapMemory(m_device, m_memory, 0, size, 0, &m_mapped); res != VK_SUCCESS)
+                return std::unexpected(fmt::format("failed to map device buffer memory: {}", string_VkResult(res)));
+
             return {};
         }
 
         std::expected<void, std::string> renderer::device_buffer::write_data(const void* bytes, uint64_t size, VkQueue transfer_queue,
                                                                              VkCommandPool command_pool) {
             if (!transfer_queue || !command_pool) {
-                void* mapped;
-                if (auto res = vkMapMemory(m_device, m_memory, 0, size, 0, &mapped); res != VK_SUCCESS)
-                    return std::unexpected(fmt::format("failed to map device buffer memory: {}", string_VkResult(res)));
-
-                std::memcpy(mapped, bytes, size);
-
-                vkUnmapMemory(m_device, m_memory);
-
+                std::memcpy(m_mapped, bytes, size);
                 return {};
             }
 
@@ -115,6 +112,11 @@ namespace arbor {
         }
 
         void renderer::device_buffer::free() {
+            if (m_mapped) {
+                vkUnmapMemory(m_device, m_memory);
+                m_mapped = nullptr;
+            }
+
             if (m_buffer && m_device) {
                 vkDestroyBuffer(m_device, m_buffer, nullptr);
                 m_buffer = VK_NULL_HANDLE;
@@ -160,6 +162,23 @@ namespace arbor {
 
             if (auto res = vk.index_buffer.write_data(m_test_indices.data(), size, vk.graphics_queue, vk.command_pool); !res)
                 return res;
+
+            return {};
+        }
+
+        std::expected<void, std::string> renderer::make_uniform_buffers() {
+            auto size = sizeof(engine::mvp_ubo);
+
+            vk.uniform_buffers.resize(vk.sync.frames_in_flight);
+
+            for (auto& buffer : vk.uniform_buffers) {
+                if (auto res = buffer.make(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vk.device,
+                                           vk.physical_device.handle);
+                    !res) {
+                    return res;
+                }
+            }
 
             return {};
         }

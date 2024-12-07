@@ -15,7 +15,7 @@ namespace arbor {
             return {};
         }
 
-        std::expected<void, std::string> renderer::make_vk_swapchain() {
+        std::expected<void, std::string> renderer::make_vk_swapchain_and_pipeline() {
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk.physical_device.handle, vk.swapchain.surface, &vk.swapchain.surface_capabilities);
             vk.swapchain.extent = vk.swapchain.surface_capabilities.currentExtent;
 
@@ -171,7 +171,7 @@ namespace arbor {
             if (vk.swapchain.handle && vk.device)
                 vkDestroySwapchainKHR(vk.device, vk.swapchain.handle, nullptr);
 
-            return make_vk_swapchain();
+            return make_vk_swapchain_and_pipeline();
         }
     } // namespace engine
 } // namespace arbor

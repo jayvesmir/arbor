@@ -24,6 +24,12 @@ namespace arbor {
             if (m_pipeline)
                 vkDestroyPipeline(m_parent.vk.device, m_pipeline, nullptr);
 
+            if (m_descriptor_pool)
+                vkDestroyDescriptorPool(m_parent.vk.device, m_descriptor_pool, nullptr);
+
+            if (m_descriptor_set_layout)
+                vkDestroyDescriptorSetLayout(m_parent.vk.device, m_descriptor_set_layout, nullptr);
+
             if (m_pipeline_layout)
                 vkDestroyPipelineLayout(m_parent.vk.device, m_pipeline_layout, nullptr);
 
@@ -32,6 +38,9 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::pipeline::reload() {
+            if (auto res = make_vk_descriptor_pool_and_sets(); !res)
+                return res;
+
             m_parent.m_logger->trace("creating a vulkan pipeline layout");
 
             if (m_pipeline_layout)
@@ -62,7 +71,7 @@ namespace arbor {
             m_rasterizer_state.polygonMode = VK_POLYGON_MODE_FILL;
             m_rasterizer_state.lineWidth   = 1.0f;
             m_rasterizer_state.cullMode    = VK_CULL_MODE_BACK_BIT;
-            m_rasterizer_state.frontFace   = VK_FRONT_FACE_CLOCKWISE;
+            m_rasterizer_state.frontFace   = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
             m_multisampler_state.sType                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
             m_multisampler_state.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -75,7 +84,9 @@ namespace arbor {
             m_color_blend_state.attachmentCount = 1;
             m_color_blend_state.pAttachments    = &m_color_blend_attachment;
 
-            m_pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            m_pipeline_layout_create_info.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            m_pipeline_layout_create_info.setLayoutCount = 1;
+            m_pipeline_layout_create_info.pSetLayouts    = &m_descriptor_set_layout;
 
             if (auto res = vkCreatePipelineLayout(m_parent.vk.device, &m_pipeline_layout_create_info, nullptr, &m_pipeline_layout);
                 res != VK_SUCCESS)

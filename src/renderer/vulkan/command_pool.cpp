@@ -4,7 +4,7 @@
 
 namespace arbor {
     namespace engine {
-        std::expected<void, std::string> renderer::make_vk_command_pool_and_buffer() {
+        std::expected<void, std::string> renderer::make_vk_command_pool_and_buffers() {
             VkCommandPoolCreateInfo pool_create_info{};
             VkCommandBufferAllocateInfo buffer_alloc_info{};
 

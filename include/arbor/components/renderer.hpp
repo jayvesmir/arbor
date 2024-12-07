@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 #include "arbor/components/component.hpp"
 #include "arbor/engine.hpp"
@@ -104,9 +105,13 @@ namespace arbor {
                 VkRect2D m_scissor{};
                 VkViewport m_viewport{};
 
-                VkPipeline m_pipeline = VK_NULL_HANDLE;
-                VkRenderPass m_render_pass = VK_NULL_HANDLE;
+                VkPipeline m_pipeline              = VK_NULL_HANDLE;
+                VkRenderPass m_render_pass         = VK_NULL_HANDLE;
                 VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
+
+                std::vector<VkDescriptorSet> m_descriptor_sets;
+                VkDescriptorPool m_descriptor_pool            = VK_NULL_HANDLE;
+                VkDescriptorSetLayout m_descriptor_set_layout = VK_NULL_HANDLE;
 
                 std::vector<VkDynamicState> m_dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
                 std::vector<VkPipelineShaderStageCreateInfo> m_pipeline_stages;
@@ -128,6 +133,9 @@ namespace arbor {
                 constexpr auto viewports() const { return &m_viewport; }
                 constexpr auto render_pass() const { return m_render_pass; }
                 constexpr auto pipeline_handle() const { return m_pipeline; }
+
+              private:
+                std::expected<void, std::string> make_vk_descriptor_pool_and_sets();
             };
 
             class device_buffer {
@@ -136,6 +144,8 @@ namespace arbor {
 
                 VkBuffer m_buffer       = VK_NULL_HANDLE;
                 VkDeviceMemory m_memory = VK_NULL_HANDLE;
+
+                void* m_mapped = nullptr;
 
               public:
                 ~device_buffer();
@@ -192,6 +202,7 @@ namespace arbor {
 
                 renderer::device_buffer index_buffer;
                 renderer::device_buffer vertex_buffer;
+                std::vector<renderer::device_buffer> uniform_buffers;
 
                 struct {
                     const uint32_t frames_in_flight = 1;
@@ -217,6 +228,13 @@ namespace arbor {
                 {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
             };
 
+            // const std::vector<engine::vertex_2d> m_test_vertices = {
+            //     {{-0.5f, -0.5f}, {1.0f, 0.5f, 0.5f}},
+            //     {{0.5f, 0.5f}, {1.0f, 0.5f, 0.5f}},
+            //     {{0.5f, -0.5f}, {1.0f, 0.5f, 0.5f}},
+            //     {{-0.5f, 0.5f}, {1.0f, 0.5f, 0.5f}},
+            // };
+
             const std::vector<uint32_t> m_test_indices = {
                 0, 2, 1, 1, 3, 0,
             };
@@ -235,18 +253,20 @@ namespace arbor {
 
           private:
             std::expected<uint32_t, std::string> acquire_image();
+            std::expected<void, std::string> reload_swapchain();
+            std::expected<void, std::string> update_ubos();
 
             std::expected<void, std::string> make_vk_instance();
             std::expected<void, std::string> make_vk_device();
             std::expected<void, std::string> make_vk_surface();
             std::expected<void, std::string> make_vk_pipeline();
-            std::expected<void, std::string> make_vk_swapchain();
-            std::expected<void, std::string> make_vk_command_pool_and_buffer();
+            std::expected<void, std::string> make_vk_swapchain_and_pipeline();
+            std::expected<void, std::string> make_vk_command_pool_and_buffers();
             std::expected<void, std::string> make_sync_objects();
-            std::expected<void, std::string> reload_swapchain();
 
             std::expected<void, std::string> make_vertex_buffer();
             std::expected<void, std::string> make_index_buffer();
+            std::expected<void, std::string> make_uniform_buffers();
         };
     } // namespace engine
 } // namespace arbor

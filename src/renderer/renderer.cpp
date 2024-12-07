@@ -1,5 +1,13 @@
 #include "arbor/components/renderer.hpp"
 
+#include <chrono>
+#include <cstdlib>
+
+#include "arbor/model.hpp"
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float3.hpp"
+#include "glm/trigonometric.hpp"
 #include "vulkan/vk_enum_string_helper.h"
 
 namespace arbor {
@@ -15,6 +23,7 @@ namespace arbor {
 
             vk.vertex_buffer.free();
             vk.index_buffer.free();
+            vk.uniform_buffers.clear();
 
             m_pipelines.clear();
 
@@ -94,16 +103,19 @@ namespace arbor {
             if (auto res = make_vk_device(); !res)
                 return res;
 
-            if (auto res = make_vk_swapchain(); !res)
-                return res;
-
             if (auto res = make_vertex_buffer(); !res)
                 return res;
 
             if (auto res = make_index_buffer(); !res)
                 return res;
 
-            if (auto res = make_vk_command_pool_and_buffer(); !res)
+            if (auto res = make_uniform_buffers(); !res)
+                return res;
+
+            if (auto res = make_vk_swapchain_and_pipeline(); !res)
+                return res;
+
+            if (auto res = make_vk_command_pool_and_buffers(); !res)
                 return res;
 
             if (auto res = make_sync_objects(); !res)
@@ -113,7 +125,13 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::update() {
-            VkClearValue background{};
+            static VkClearValue background{
+                .color =
+                    {
+                        .float32 = {0.0f, 0.0f, 0.0f, 1.0f},
+                    },
+            };
+
             VkRenderPassBeginInfo render_pass_begin_info{};
             VkCommandBufferBeginInfo cmd_buffer_begin_info{};
 
@@ -129,17 +147,12 @@ namespace arbor {
             vkResetFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame]);
             vkResetCommandBuffer(vk.command_buffers[vk.sync.current_frame], 0);
 
+            update_ubos();
+
             cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
             if (auto res = vkBeginCommandBuffer(vk.command_buffers[vk.sync.current_frame], &cmd_buffer_begin_info); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to begin recording a command buffer: {}", string_VkResult(res)));
-
-            background = {
-                .color =
-                    {
-                        .float32 = {0.0f, 0.0f, 0.0f, 1.0f},
-                    },
-            };
 
             render_pass_begin_info.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             render_pass_begin_info.renderPass        = m_pipelines.back().render_pass();
@@ -159,6 +172,10 @@ namespace arbor {
 
             vkCmdSetViewport(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().viewports());
             vkCmdSetScissor(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().scissors());
+
+            vkCmdBindDescriptorSets(vk.command_buffers[vk.sync.current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    m_pipelines.back().m_pipeline_layout, 0, 1,
+                                    &m_pipelines.back().m_descriptor_sets[vk.sync.current_frame], 0, nullptr);
 
             vkCmdDrawIndexed(vk.command_buffers[vk.sync.current_frame], m_test_indices.size(), 1, 0, 0, 0);
 
@@ -212,6 +229,23 @@ namespace arbor {
                 return {};
 
             return reload_swapchain();
+        }
+
+        std::expected<void, std::string> renderer::update_ubos() {
+            float time = std::chrono::high_resolution_clock::now().time_since_epoch().count() * 1e-1;
+
+            engine::mvp_ubo mvp;
+
+            mvp.model      = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.view       = glm::lookAt(glm::vec3(2.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.projection = glm::perspective(glm::radians(70.0f),
+                                              static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
+
+            mvp.projection[1][1] *= -1.0;
+
+            vk.uniform_buffers[vk.sync.current_frame].write_data(&mvp, sizeof(mvp));
+
+            return {};
         }
     } // namespace engine
 } // namespace arbor
