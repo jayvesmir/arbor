@@ -232,7 +232,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::update_ubos() {
-            float time = std::chrono::high_resolution_clock::now().time_since_epoch().count() * 1e-1;
+            float time = std::chrono::high_resolution_clock::now().time_since_epoch().count() * 1e-9;
 
             engine::mvp_ubo mvp;
 
