@@ -1,7 +1,6 @@
 #include "arbor/engine.hpp"
+#include <algorithm>
 #include <chrono>
-#include <ranges>
-#include <thread>
 
 #include "SDL3/SDL_events.h"
 #include "arbor/components/renderer.hpp"
@@ -72,7 +71,11 @@ namespace arbor {
             m_running = true;
             m_running.notify_all();
 
+            auto frame_start = std::chrono::high_resolution_clock::now();
+
             while (m_running) {
+                frame_start = std::chrono::high_resolution_clock::now();
+
                 while (m_window.poll_event().first)
                     process_window_event(m_window.current_event());
 
@@ -83,18 +86,21 @@ namespace arbor {
                         return res;
                     }
                 }
+
+                m_frame_count++;
+                m_frame_time_ms = (std::chrono::high_resolution_clock::now() - frame_start).count() * 1e-6;
             }
 
             return {};
         }
 
         std::expected<void, std::string> instance::process_window_event(const SDL_Event& event) {
+            ImGui_ImplSDL3_ProcessEvent(&event);
+
             if (event.type == SDL_EVENT_QUIT) {
                 m_running = false;
                 m_running.notify_all();
             }
-
-            ImGui_ImplSDL3_ProcessEvent(&event);
 
             if (event.type == SDL_EVENT_WINDOW_RESIZED) {
                 auto renderer_it = std::ranges::find_if(

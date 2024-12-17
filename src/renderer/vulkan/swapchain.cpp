@@ -16,7 +16,8 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::make_vk_swapchain_and_pipeline() {
-            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk.physical_device.handle, vk.swapchain.surface, &vk.swapchain.surface_capabilities);
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk.physical_device.handle, vk.swapchain.surface,
+                                                      &vk.swapchain.surface_capabilities);
             vk.swapchain.extent = vk.swapchain.surface_capabilities.currentExtent;
 
             uint32_t vk_n = 0;
@@ -28,7 +29,8 @@ namespace arbor {
             std::vector<VkPresentModeKHR> present_modes;
             vkGetPhysicalDeviceSurfacePresentModesKHR(vk.physical_device.handle, vk.swapchain.surface, &vk_n, nullptr);
             present_modes.resize(vk_n);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(vk.physical_device.handle, vk.swapchain.surface, &vk_n, present_modes.data());
+            vkGetPhysicalDeviceSurfacePresentModesKHR(vk.physical_device.handle, vk.swapchain.surface, &vk_n,
+                                                      present_modes.data());
 
             if (formats.empty() || present_modes.empty())
                 return std::unexpected("incompatible surface");
@@ -66,29 +68,30 @@ namespace arbor {
 
             VkSwapchainCreateInfoKHR create_info{};
 
-            create_info.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+            create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
             create_info.surface = vk.swapchain.surface;
             create_info.minImageCount =
                 std::min(vk.swapchain.surface_capabilities.minImageCount + 1, vk.swapchain.surface_capabilities.maxImageCount);
 
-            create_info.imageExtent     = vk.swapchain.extent;
-            create_info.presentMode     = vk.swapchain.present_mode;
-            create_info.imageFormat     = vk.swapchain.format.format;
+            create_info.imageExtent = vk.swapchain.extent;
+            create_info.presentMode = vk.swapchain.present_mode;
+            create_info.imageFormat = vk.swapchain.format.format;
             create_info.imageColorSpace = vk.swapchain.format.colorSpace;
 
             create_info.imageArrayLayers = 1;
-            create_info.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-            if (vk.physical_device.queue_family_indices.graphics_family == vk.physical_device.queue_family_indices.present_family) {
+            if (vk.physical_device.queue_family_indices.graphics_family ==
+                vk.physical_device.queue_family_indices.present_family) {
                 create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
             } else {
-                create_info.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
+                create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
                 create_info.queueFamilyIndexCount = 2;
-                create_info.pQueueFamilyIndices   = reinterpret_cast<uint32_t*>(&vk.physical_device.queue_family_indices);
+                create_info.pQueueFamilyIndices = reinterpret_cast<uint32_t*>(&vk.physical_device.queue_family_indices);
             }
 
-            create_info.clipped        = VK_TRUE;
-            create_info.preTransform   = vk.swapchain.surface_capabilities.currentTransform;
+            create_info.clipped = VK_TRUE;
+            create_info.preTransform = vk.swapchain.surface_capabilities.currentTransform;
             create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
             if (auto res = vkCreateSwapchainKHR(vk.device, &create_info, nullptr, &vk.swapchain.handle); res != VK_SUCCESS)
@@ -108,25 +111,26 @@ namespace arbor {
                 VkImageViewCreateInfo view_create_info{};
                 VkFramebufferCreateInfo framebuffer_create_info{};
 
-                view_create_info.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-                view_create_info.image    = vk.swapchain.images[i];
+                view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+                view_create_info.image = vk.swapchain.images[i];
                 view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                view_create_info.format   = vk.swapchain.format.format;
+                view_create_info.format = vk.swapchain.format.format;
 
                 view_create_info.subresourceRange.levelCount = 1;
                 view_create_info.subresourceRange.layerCount = 1;
                 view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
-                if (auto res = vkCreateImageView(vk.device, &view_create_info, nullptr, &vk.swapchain.image_views[i]); res != VK_SUCCESS)
+                if (auto res = vkCreateImageView(vk.device, &view_create_info, nullptr, &vk.swapchain.image_views[i]);
+                    res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create swapchain image view {}: {}", i, string_VkResult(res)));
 
-                framebuffer_create_info.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-                framebuffer_create_info.renderPass      = m_pipelines.back().render_pass();
+                framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+                framebuffer_create_info.renderPass = m_pipelines.back().render_pass();
                 framebuffer_create_info.attachmentCount = 1;
-                framebuffer_create_info.pAttachments    = &vk.swapchain.image_views[i];
-                framebuffer_create_info.width           = vk.swapchain.extent.width;
-                framebuffer_create_info.height          = vk.swapchain.extent.height;
-                framebuffer_create_info.layers          = 1;
+                framebuffer_create_info.pAttachments = &vk.swapchain.image_views[i];
+                framebuffer_create_info.width = vk.swapchain.extent.width;
+                framebuffer_create_info.height = vk.swapchain.extent.height;
+                framebuffer_create_info.layers = 1;
 
                 if (auto res = vkCreateFramebuffer(vk.device, &framebuffer_create_info, nullptr, &vk.swapchain.framebuffers[i]);
                     res != VK_SUCCESS)

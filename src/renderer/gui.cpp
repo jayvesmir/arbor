@@ -48,6 +48,14 @@ namespace arbor {
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
 
+            ImGui::Begin("scene info");
+
+            ImGui::Text("scene: %s", m_parent.current_scene().name().c_str());
+            ImGui::Text("frametime: %.03f", m_parent.frame_time_ms());
+            ImGui::Text("fps: %.03f", 1000 / m_parent.frame_time_ms());
+
+            ImGui::End();
+
             ImGui::Render();
             ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), vk.command_buffers[vk.sync.current_frame]);
             return {};

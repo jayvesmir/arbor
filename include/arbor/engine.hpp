@@ -32,15 +32,21 @@ namespace arbor {
             std::unordered_map<std::string, engine::scene> m_scenes;
             std::optional<std::unordered_map<std::string, engine::scene>::const_iterator> m_current_scene;
 
+            uint64_t m_frame_count = 0;
+            double m_frame_time_ms = 0;
+
           public:
             instance();
             ~instance();
 
-            instance(instance&&)      = delete;
+            instance(instance&&) = delete;
             instance(const instance&) = delete;
 
             std::expected<void, std::string> run(const engine::application_config& app_config);
             std::expected<void, std::string> push_scene_and_set_current(const engine::scene& scene);
+
+            constexpr auto frame_count() const { return m_frame_count; }
+            constexpr auto frame_time_ms() const { return m_frame_time_ms; };
 
             constexpr auto& scenes() const { return m_scenes; }
             auto& current_scene() const { return (m_current_scene.value_or(m_scenes.begin()))->second; }
