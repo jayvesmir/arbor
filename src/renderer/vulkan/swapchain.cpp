@@ -35,11 +35,6 @@ namespace arbor {
             if (formats.empty() || present_modes.empty())
                 return std::unexpected("incompatible surface");
 
-            for (auto& format : formats) {
-                if (format.format == VK_FORMAT_R8G8B8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-                    vk.swapchain.format = format;
-            }
-
             auto format = std::ranges::find_if(formats, [](const VkSurfaceFormatKHR& format) {
                 if (format.format == VK_FORMAT_R8G8B8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
                     return true;
