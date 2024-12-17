@@ -1,0 +1,9 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 130
+PointerAlignment: Left
+NamespaceIndentation: All
+AlignEscapedNewlines: Left
+AlignTrailingComments: Never
+AlignConsecutiveMacros: Consecutive
+AllowShortFunctionsOnASingleLine: Inline
