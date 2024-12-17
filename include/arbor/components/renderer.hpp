@@ -14,6 +14,8 @@
 #include "arbor/types.hpp"
 #include "arbor/window.hpp"
 
+#include "imgui.h"
+#include "imgui_internal.h"
 #include "vulkan/vulkan.h"
 
 namespace arbor {
@@ -32,8 +34,8 @@ namespace arbor {
 
               public:
                 enum etype {
-                    invalid  = -1,
-                    vertex   = 0,
+                    invalid = -1,
+                    vertex = 0,
                     fragment = 1,
                 };
 
@@ -44,7 +46,7 @@ namespace arbor {
                 std::string m_glsl;
                 std::vector<uint32_t> m_spv;
 
-                VkDevice m_vk_device       = VK_NULL_HANDLE;
+                VkDevice m_vk_device = VK_NULL_HANDLE;
                 VkShaderModule m_vk_shader = VK_NULL_HANDLE;
 
               public:
@@ -56,7 +58,7 @@ namespace arbor {
                 shader(shader&& other)
                     : m_source(std::move(other.m_source)), m_type(other.m_type), m_vk_device(other.m_vk_device),
                       m_vk_shader(other.m_vk_shader) {
-                    other.m_type      = etype::invalid;
+                    other.m_type = etype::invalid;
                     other.m_vk_device = VK_NULL_HANDLE;
                     other.m_vk_shader = VK_NULL_HANDLE;
                 }
@@ -65,11 +67,11 @@ namespace arbor {
 
                 auto& operator=(shader&& other) {
                     m_source.swap(other.m_source);
-                    m_type      = other.m_type;
+                    m_type = other.m_type;
                     m_vk_device = other.m_vk_device;
 
                     other.m_source.clear();
-                    other.m_type      = etype::invalid;
+                    other.m_type = etype::invalid;
                     other.m_vk_device = VK_NULL_HANDLE;
                     other.m_vk_shader = VK_NULL_HANDLE;
 
@@ -105,12 +107,12 @@ namespace arbor {
                 VkRect2D m_scissor{};
                 VkViewport m_viewport{};
 
-                VkPipeline m_pipeline              = VK_NULL_HANDLE;
-                VkRenderPass m_render_pass         = VK_NULL_HANDLE;
+                VkPipeline m_pipeline = VK_NULL_HANDLE;
+                VkRenderPass m_render_pass = VK_NULL_HANDLE;
                 VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
 
                 std::vector<VkDescriptorSet> m_descriptor_sets;
-                VkDescriptorPool m_descriptor_pool            = VK_NULL_HANDLE;
+                VkDescriptorPool m_descriptor_pool = VK_NULL_HANDLE;
                 VkDescriptorSetLayout m_descriptor_set_layout = VK_NULL_HANDLE;
 
                 std::vector<VkDynamicState> m_dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
@@ -132,6 +134,7 @@ namespace arbor {
                 constexpr auto scissors() const { return &m_scissor; }
                 constexpr auto viewports() const { return &m_viewport; }
                 constexpr auto render_pass() const { return m_render_pass; }
+                constexpr auto descriptor_pool() const { return m_descriptor_pool; }
                 constexpr auto pipeline_handle() const { return m_pipeline; }
 
               private:
@@ -142,7 +145,7 @@ namespace arbor {
                 VkDevice m_device;
                 VkPhysicalDevice m_physical_device;
 
-                VkBuffer m_buffer       = VK_NULL_HANDLE;
+                VkBuffer m_buffer = VK_NULL_HANDLE;
                 VkDeviceMemory m_memory = VK_NULL_HANDLE;
 
                 void* m_mapped = nullptr;
@@ -152,7 +155,8 @@ namespace arbor {
                 std::expected<void, std::string> make(uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                                                       VkDevice device, VkPhysicalDevice physical_device);
 
-                std::expected<void, std::string> write_data(const void* bytes, uint64_t size, VkQueue transfer_queue = VK_NULL_HANDLE,
+                std::expected<void, std::string> write_data(const void* bytes, uint64_t size,
+                                                            VkQueue transfer_queue = VK_NULL_HANDLE,
                                                             VkCommandPool command_pool = VK_NULL_HANDLE);
 
                 void free();
@@ -181,7 +185,7 @@ namespace arbor {
 
                 struct {
                     VkSwapchainKHR handle = VK_NULL_HANDLE;
-                    VkSurfaceKHR surface  = VK_NULL_HANDLE;
+                    VkSurfaceKHR surface = VK_NULL_HANDLE;
 
                     std::vector<VkImage> images;
                     std::vector<VkImageView> image_views;
@@ -193,9 +197,9 @@ namespace arbor {
                     VkSurfaceCapabilitiesKHR surface_capabilities;
                 } swapchain;
 
-                VkDevice device        = VK_NULL_HANDLE;
+                VkDevice device = VK_NULL_HANDLE;
                 VkQueue graphics_queue = VK_NULL_HANDLE;
-                VkQueue present_queue  = VK_NULL_HANDLE;
+                VkQueue present_queue = VK_NULL_HANDLE;
 
                 VkCommandPool command_pool = VK_NULL_HANDLE;
                 std::vector<VkCommandBuffer> command_buffers;
@@ -221,6 +225,10 @@ namespace arbor {
 
             std::vector<renderer::pipeline> m_pipelines;
 
+            struct {
+                ImGuiContext* imgui_ctx = nullptr;
+            } m_gui;
+
             const std::vector<engine::vertex_2d> m_test_vertices = {
                 {{-0.5f, -0.5f}, {1.0f, 0.25f, 0.25f}},
                 {{0.5f, 0.5f}, {0.25f, 1.0f, 0.25f}},
@@ -242,7 +250,7 @@ namespace arbor {
           public:
             renderer(engine::instance& parent);
 
-            renderer(renderer&&)      = delete;
+            renderer(renderer&&) = delete;
             renderer(const renderer&) = delete;
 
             void shutdown() override;
@@ -256,6 +264,8 @@ namespace arbor {
             std::expected<void, std::string> reload_swapchain();
             std::expected<void, std::string> update_ubos();
 
+            std::expected<void, std::string> draw_gui();
+            std::expected<void, std::string> init_imgui();
             std::expected<void, std::string> make_vk_instance();
             std::expected<void, std::string> make_vk_device();
             std::expected<void, std::string> make_vk_surface();

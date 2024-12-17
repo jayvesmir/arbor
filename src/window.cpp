@@ -1,6 +1,7 @@
 #include "arbor/window.hpp"
 
 #include "SDL3/SDL_video.h"
+#include "imgui_impl_sdl3.h"
 
 namespace arbor {
     namespace engine {
@@ -21,9 +22,9 @@ namespace arbor {
             if (m_initialized)
                 return std::unexpected(fmt::format("this window has already been instantiated ({})", fmt::ptr(this)));
 
-            m_width  = width;
+            m_width = width;
             m_height = height;
-            m_title  = title;
+            m_title = title;
 
             if (!SDL_InitSubSystem(m_init_flags))
                 sdl_error("failed to initialize SDL: {}");

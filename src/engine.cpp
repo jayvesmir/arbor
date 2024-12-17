@@ -5,6 +5,7 @@
 
 #include "SDL3/SDL_events.h"
 #include "arbor/components/renderer.hpp"
+#include "imgui_impl_sdl3.h"
 
 namespace arbor {
     namespace engine {
@@ -92,6 +93,8 @@ namespace arbor {
                 m_running = false;
                 m_running.notify_all();
             }
+
+            ImGui_ImplSDL3_ProcessEvent(&event);
 
             if (event.type == SDL_EVENT_WINDOW_RESIZED) {
                 auto renderer_it = std::ranges::find_if(

@@ -10,11 +10,15 @@
 #include "glm/trigonometric.hpp"
 #include "vulkan/vk_enum_string_helper.h"
 
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_vulkan.h"
+
 namespace arbor {
     namespace engine {
         renderer::renderer(engine::instance& parent) : m_parent(parent) {
             m_identifier = "renderer";
-            m_type       = etype::renderer;
+            m_type = etype::renderer;
         }
 
         void renderer::shutdown() {
@@ -71,6 +75,10 @@ namespace arbor {
                 vk.swapchain.surface = VK_NULL_HANDLE;
             }
 
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplSDL3_Shutdown();
+            ImGui::DestroyContext(m_gui.imgui_ctx);
+
             if (vk.device) {
                 vkDestroyDevice(vk.device, nullptr);
                 vk.device = VK_NULL_HANDLE;
@@ -121,6 +129,9 @@ namespace arbor {
             if (auto res = make_sync_objects(); !res)
                 return res;
 
+            if (auto res = init_imgui(); !res)
+                return res;
+
             return {};
         }
 
@@ -151,15 +162,16 @@ namespace arbor {
 
             cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-            if (auto res = vkBeginCommandBuffer(vk.command_buffers[vk.sync.current_frame], &cmd_buffer_begin_info); res != VK_SUCCESS)
+            if (auto res = vkBeginCommandBuffer(vk.command_buffers[vk.sync.current_frame], &cmd_buffer_begin_info);
+                res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to begin recording a command buffer: {}", string_VkResult(res)));
 
-            render_pass_begin_info.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            render_pass_begin_info.renderPass        = m_pipelines.back().render_pass();
-            render_pass_begin_info.framebuffer       = vk.swapchain.framebuffers[*image_idx];
+            render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            render_pass_begin_info.renderPass = m_pipelines.back().render_pass();
+            render_pass_begin_info.framebuffer = vk.swapchain.framebuffers[*image_idx];
             render_pass_begin_info.renderArea.extent = vk.swapchain.extent;
-            render_pass_begin_info.clearValueCount   = 1;
-            render_pass_begin_info.pClearValues      = &background;
+            render_pass_begin_info.clearValueCount = 1;
+            render_pass_begin_info.pClearValues = &background;
 
             vkCmdBeginRenderPass(vk.command_buffers[vk.sync.current_frame], &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -179,6 +191,8 @@ namespace arbor {
 
             vkCmdDrawIndexed(vk.command_buffers[vk.sync.current_frame], m_test_indices.size(), 1, 0, 0, 0);
 
+            draw_gui();
+
             vkCmdEndRenderPass(vk.command_buffers[vk.sync.current_frame]);
 
             if (auto res = vkEndCommandBuffer(vk.command_buffers[vk.sync.current_frame]); res != VK_SUCCESS)
@@ -187,25 +201,25 @@ namespace arbor {
             VkSubmitInfo submit_info{};
             VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-            submit_info.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-            submit_info.waitSemaphoreCount   = 1;
-            submit_info.pWaitSemaphores      = &vk.sync.wait_semaphores[vk.sync.current_frame];
-            submit_info.commandBufferCount   = 1;
-            submit_info.pCommandBuffers      = &vk.command_buffers[vk.sync.current_frame];
+            submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit_info.waitSemaphoreCount = 1;
+            submit_info.pWaitSemaphores = &vk.sync.wait_semaphores[vk.sync.current_frame];
+            submit_info.commandBufferCount = 1;
+            submit_info.pCommandBuffers = &vk.command_buffers[vk.sync.current_frame];
             submit_info.signalSemaphoreCount = 1;
-            submit_info.pSignalSemaphores    = &vk.sync.signal_semaphores[vk.sync.current_frame];
-            submit_info.pWaitDstStageMask    = wait_stages;
+            submit_info.pSignalSemaphores = &vk.sync.signal_semaphores[vk.sync.current_frame];
+            submit_info.pWaitDstStageMask = wait_stages;
 
             if (auto res = vkQueueSubmit(vk.graphics_queue, 1, &submit_info, vk.sync.in_flight_fences[vk.sync.current_frame]);
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to submit the draw queue: {}", string_VkResult(res)));
 
-            vk.sync.present_info.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+            vk.sync.present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
             vk.sync.present_info.waitSemaphoreCount = 1;
-            vk.sync.present_info.pWaitSemaphores    = &vk.sync.signal_semaphores[vk.sync.current_frame];
-            vk.sync.present_info.swapchainCount     = 1;
-            vk.sync.present_info.pSwapchains        = &vk.swapchain.handle;
-            vk.sync.present_info.pImageIndices      = &*image_idx;
+            vk.sync.present_info.pWaitSemaphores = &vk.sync.signal_semaphores[vk.sync.current_frame];
+            vk.sync.present_info.swapchainCount = 1;
+            vk.sync.present_info.pSwapchains = &vk.swapchain.handle;
+            vk.sync.present_info.pImageIndices = &*image_idx;
 
             if (auto res = vkQueuePresentKHR(vk.present_queue, &vk.sync.present_info); res != VK_SUCCESS) {
                 if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
@@ -221,7 +235,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::resize_viewport() {
-            auto old_width  = m_parent.window().width();
+            auto old_width = m_parent.window().width();
             auto old_height = m_parent.window().height();
             m_parent.window().update_dimensions();
 
@@ -236,10 +250,10 @@ namespace arbor {
 
             engine::mvp_ubo mvp;
 
-            mvp.model      = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-            mvp.view       = glm::lookAt(glm::vec3(2.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-            mvp.projection = glm::perspective(glm::radians(70.0f),
-                                              static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
+            mvp.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.view = glm::lookAt(glm::vec3(2.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.projection = glm::perspective(
+                glm::radians(70.0f), static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
 
             mvp.projection[1][1] *= -1.0;
 
