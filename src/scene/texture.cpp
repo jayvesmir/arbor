@@ -1,8 +1,7 @@
 #include "arbor/scene/texture.hpp"
 
 #include <algorithm>
-#include <iterator>
-#include <ranges>
+#include <span>
 
 #include "fmt/format.h"
 #include "stb_image.h"
@@ -19,6 +18,7 @@ namespace arbor {
                 m_pixels.resize(m_width * m_height);
                 std::ranges::copy(std::span(reinterpret_cast<texture::pixel_rgba*>(raw_data), m_width * m_height),
                                   m_pixels.begin());
+                stbi_image_free(raw_data);
             } else {
                 return std::unexpected(fmt::format("stb failed to load '{}'", m_source->string()));
             }
