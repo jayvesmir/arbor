@@ -246,11 +246,13 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::update_ubos() {
-            float time = std::chrono::high_resolution_clock::now().time_since_epoch().count() * 1e-9;
+            static float rotation = glm::radians(90.0f);
+
+            rotation += m_parent.frame_time_ms() * glm::radians(0.25f);
 
             engine::mvp_ubo mvp;
 
-            mvp.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.model = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
             mvp.view = glm::lookAt(glm::vec3(2.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             mvp.projection = glm::perspective(
                 glm::radians(70.0f), static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);

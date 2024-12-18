@@ -52,7 +52,7 @@ namespace arbor {
 
             ImGui::Text("scene: %s", m_parent.current_scene().name().c_str());
             ImGui::Text("frametime: %.03f ms", m_parent.frame_time_ms());
-            ImGui::Text("framerate: %.03f", 1000 / m_parent.frame_time_ms());
+            ImGui::Text("framerate: %.03f", 1000.0f / m_parent.frame_time_ms());
 
             ImGui::End();
 
