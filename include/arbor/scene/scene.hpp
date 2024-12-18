@@ -1,5 +1,6 @@
 #pragma once
 #include "arbor/scene/object.hpp"
+#include "arbor/scene/texture.hpp"
 
 #include <filesystem>
 #include <string>

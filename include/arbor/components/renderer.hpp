@@ -236,13 +236,6 @@ namespace arbor {
                 {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
             };
 
-            // const std::vector<engine::vertex_2d> m_test_vertices = {
-            //     {{-0.5f, -0.5f}, {1.0f, 0.5f, 0.5f}},
-            //     {{0.5f, 0.5f}, {1.0f, 0.5f, 0.5f}},
-            //     {{0.5f, -0.5f}, {1.0f, 0.5f, 0.5f}},
-            //     {{-0.5f, 0.5f}, {1.0f, 0.5f, 0.5f}},
-            // };
-
             const std::vector<uint32_t> m_test_indices = {
                 0, 2, 1, 1, 3, 0,
             };

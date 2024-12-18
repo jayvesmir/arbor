@@ -16,6 +16,7 @@ add_subdirectory(sdl)
 add_subdirectory(glm)
 add_subdirectory(spdlog)
 add_subdirectory(shaderc)
+add_subdirectory(stb-cmake)
 
 find_package(Vulkan REQUIRED)
 
@@ -36,6 +37,6 @@ target_link_libraries(imgui PRIVATE SDL3-static)
 
 add_library(${PROJECT_NAME}_external INTERFACE)
 
-target_link_libraries(${PROJECT_NAME}_external INTERFACE spdlog SDL3-static glm shaderc_combined imgui ${Vulkan_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_external INTERFACE spdlog SDL3-static glm shaderc_combined imgui stb ${Vulkan_LIBRARIES})
 target_link_directories(${PROJECT_NAME}_external INTERFACE ${Vulkan_LIBRARY_DIRS})
 target_include_directories(${PROJECT_NAME}_external INTERFACE ${Vulkan_INCLUDE_DIRS})
