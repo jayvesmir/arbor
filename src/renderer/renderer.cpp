@@ -119,19 +119,19 @@ namespace arbor {
             if (auto res = make_uniform_buffers(); !res)
                 return res;
 
-            if (auto res = make_vk_swapchain_and_pipeline(); !res)
+            if (auto res = make_vk_command_pool_and_buffers(); !res)
                 return res;
 
-            if (auto res = make_vk_command_pool_and_buffers(); !res)
+            if (auto res = load_assets(); !res)
+                return res;
+
+            if (auto res = make_vk_swapchain_and_pipeline(); !res)
                 return res;
 
             if (auto res = make_sync_objects(); !res)
                 return res;
 
             if (auto res = init_imgui(); !res)
-                return res;
-
-            if (auto res = load_assets(); !res)
                 return res;
 
             return {};
@@ -264,14 +264,18 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::update_ubos() {
-            static float rotation = glm::radians(90.0f);
+            static float rotation = 0.0f;
+            static float position = 0.0f;
 
-            rotation += m_parent.frame_time_ms() * glm::radians(0.1f);
+            rotation += m_parent.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
+            position += m_parent.frame_time_ms() * (0.005f / 2.0f);
 
             engine::mvp_ubo mvp;
 
-            mvp.model = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
-            mvp.view = glm::lookAt(glm::vec3(1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.model = glm::mat4(1.0f);
+            mvp.model = glm::translate(mvp.model, glm::vec3(glm::sin(position), glm::cos(position), 0.0f));
+            mvp.model = glm::rotate(mvp.model, rotation, glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(0.0f, 1.0f, 1.0f);
+            mvp.view = glm::lookAt(glm::vec3(3.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             mvp.projection = glm::perspective(
                 glm::radians(70.0f), static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
 

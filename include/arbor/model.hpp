@@ -13,8 +13,9 @@ namespace arbor {
         struct vertex_2d {
             glm::vec2 position;
             glm::vec3 color;
+            glm::vec2 texture_coord;
 
-            static std::pair<VkVertexInputBindingDescription, std::array<VkVertexInputAttributeDescription, 2>> make_vk_binding();
+            static std::pair<VkVertexInputBindingDescription, std::array<VkVertexInputAttributeDescription, 3>> make_vk_binding();
         };
 
         struct mvp_ubo {

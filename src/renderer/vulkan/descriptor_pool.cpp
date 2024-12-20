@@ -9,33 +9,41 @@ namespace arbor {
             if (m_descriptor_set_layout)
                 return {};
 
-            VkDescriptorSetLayoutBinding layout_binding{};
             VkDescriptorSetLayoutCreateInfo create_info{};
 
-            layout_binding.binding = 0;
-            layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            layout_binding.descriptorCount = 1;
+            std::vector<VkDescriptorSetLayoutBinding> layout_bindings(2);
+            std::vector<VkDescriptorPoolSize> pool_sizes(2);
 
-            layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+            layout_bindings[0].binding = 0;
+            layout_bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            layout_bindings[0].descriptorCount = 1;
+            layout_bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+            layout_bindings[1].binding = 1;
+            layout_bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            layout_bindings[1].descriptorCount = 1;
+            layout_bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+            pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            pool_sizes[0].descriptorCount = m_parent.vk.sync.frames_in_flight;
+
+            pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            pool_sizes[1].descriptorCount = m_parent.vk.sync.frames_in_flight;
 
             create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            create_info.bindingCount = 1;
-            create_info.pBindings = &layout_binding;
+            create_info.bindingCount = layout_bindings.size();
+            create_info.pBindings = layout_bindings.data();
 
             m_parent.m_logger->trace("creating a vulkan descriptor set layout");
             if (auto res = vkCreateDescriptorSetLayout(m_parent.vk.device, &create_info, nullptr, &m_descriptor_set_layout);
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to create a descriptor set layout: {}", string_VkResult(res)));
 
-            VkDescriptorPoolSize pool_size{};
             VkDescriptorPoolCreateInfo pool_create_info{};
 
-            pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            pool_size.descriptorCount = m_parent.vk.sync.frames_in_flight;
-
             pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            pool_create_info.poolSizeCount = 1;
-            pool_create_info.pPoolSizes = &pool_size;
+            pool_create_info.poolSizeCount = pool_sizes.size();
+            pool_create_info.pPoolSizes = pool_sizes.data();
             pool_create_info.maxSets = m_parent.vk.sync.frames_in_flight;
 
             m_parent.m_logger->trace("creating a vulkan descriptor pool");
@@ -61,21 +69,35 @@ namespace arbor {
 
             for (auto i = 0ull; i < m_parent.vk.sync.frames_in_flight; i++) {
                 VkDescriptorBufferInfo buffer_info{};
-                VkWriteDescriptorSet write{};
+                VkDescriptorImageInfo image_info{};
+
+                std::vector<VkWriteDescriptorSet> writes(2);
 
                 buffer_info.buffer = *m_parent.vk.uniform_buffers[i].buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = sizeof(engine::mvp_ubo);
 
-                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                write.dstSet = m_descriptor_sets[i];
-                write.dstBinding = 0;
-                write.dstArrayElement = 0;
-                write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                write.descriptorCount = 1;
-                write.pBufferInfo = &buffer_info;
+                image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                image_info.imageView = m_parent.m_textures.at(0).image_view();
+                image_info.sampler = m_parent.m_textures.at(0).sampler();
 
-                vkUpdateDescriptorSets(m_parent.vk.device, 1, &write, 0, nullptr);
+                writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                writes[0].dstSet = m_descriptor_sets[i];
+                writes[0].dstBinding = 0;
+                writes[0].dstArrayElement = 0;
+                writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                writes[0].descriptorCount = 1;
+                writes[0].pBufferInfo = &buffer_info;
+
+                writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                writes[1].dstSet = m_descriptor_sets[i];
+                writes[1].dstBinding = 1;
+                writes[1].dstArrayElement = 0;
+                writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                writes[1].descriptorCount = 1;
+                writes[1].pImageInfo = &image_info;
+
+                vkUpdateDescriptorSets(m_parent.vk.device, writes.size(), writes.data(), 0, nullptr);
             }
 
             return {};

@@ -90,7 +90,7 @@ namespace arbor {
 
             class pipeline {
                 friend class renderer;
-                const engine::renderer& m_parent;
+                engine::renderer& m_parent;
 
                 VkPipelineLayoutCreateInfo m_pipeline_layout_create_info{};
                 VkPipelineColorBlendAttachmentState m_color_blend_attachment{};
@@ -120,7 +120,7 @@ namespace arbor {
 
               public:
                 ~pipeline();
-                pipeline(const engine::renderer& parent) : m_parent(parent) {}
+                pipeline(engine::renderer& parent) : m_parent(parent) {}
                 pipeline(pipeline&& other) : m_parent(other.m_parent), m_shaders(std::move(other.m_shaders)) {}
 
                 pipeline(const pipeline&) = delete;
@@ -189,6 +189,10 @@ namespace arbor {
                 void destroy();
 
                 std::expected<void, std::string> load(const engine::texture& source, engine::renderer& renderer);
+
+                constexpr auto image() { return m_image; }
+                constexpr auto sampler() { return m_sampler; }
+                constexpr auto image_view() { return m_image_view; }
             };
 
           private:
@@ -260,10 +264,10 @@ namespace arbor {
             } m_gui;
 
             const std::vector<engine::vertex_2d> m_test_vertices = {
-                {{-0.5f, -0.5f}, {1.0f, 0.25f, 0.25f}},
-                {{0.5f, 0.5f}, {0.25f, 1.0f, 0.25f}},
-                {{0.5f, -0.5f}, {0.25f, 0.25f, 1.0f}},
-                {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+                {{-1.0f, -1.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+                {{1.0f, 1.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+                {{1.0f, -1.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+                {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
             };
 
             const std::vector<uint32_t> m_test_indices = {

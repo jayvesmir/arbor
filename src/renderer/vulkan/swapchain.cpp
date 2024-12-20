@@ -36,7 +36,7 @@ namespace arbor {
                 return std::unexpected("incompatible surface");
 
             auto format = std::ranges::find_if(formats, [](const VkSurfaceFormatKHR& format) {
-                if (format.format == VK_FORMAT_R8G8B8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+                if (format.format == VK_FORMAT_R8G8B8A8_SINT && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
                     return true;
                 return false;
             });
