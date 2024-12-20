@@ -27,8 +27,8 @@ namespace arbor {
             init_info.Queue = vk.graphics_queue;
             init_info.DescriptorPoolSize = 1;
             init_info.Subpass = 0;
-            init_info.MinImageCount = vk.swapchain.images.size();
-            init_info.ImageCount = vk.swapchain.images.size();
+            init_info.MinImageCount = vk.sync.frames_in_flight;
+            init_info.ImageCount = vk.sync.frames_in_flight;
             init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
             init_info.RenderPass = m_pipelines.back().render_pass();
 

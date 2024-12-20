@@ -8,16 +8,17 @@ namespace arbor {
     namespace engine {
         std::expected<void, std::string> renderer::device_buffer::make(uint64_t size, VkBufferUsageFlags usage,
                                                                        VkMemoryPropertyFlags properties, VkDevice device,
-                                                                       VkPhysicalDevice physical_device) {
+                                                                       VkPhysicalDevice physical_device, bool keep_mapped) {
             VkBufferCreateInfo create_info{};
             VkMemoryAllocateInfo allocation_info{};
 
-            m_device          = device;
+            m_keep_mapped = keep_mapped;
+            m_device = device;
             m_physical_device = physical_device;
 
-            create_info.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            create_info.size        = size;
-            create_info.usage       = usage;
+            create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            create_info.size = size;
+            create_info.usage = usage;
             create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
             if (auto res = vkCreateBuffer(m_device, &create_info, nullptr, &m_buffer); res != VK_SUCCESS)
@@ -33,12 +34,13 @@ namespace arbor {
 
             auto memory_type_idx = 0u;
             for (memory_type_idx = 0u; memory_type_idx < memory_properties.memoryTypeCount; memory_type_idx++) {
-                if ((memory_type & (1 << memory_type_idx)) && (memory_properties.memoryTypes[memory_type_idx].propertyFlags & properties))
+                if ((memory_type & (1 << memory_type_idx)) &&
+                    (memory_properties.memoryTypes[memory_type_idx].propertyFlags & properties))
                     break;
             }
 
-            allocation_info.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            allocation_info.allocationSize  = memory_requirements.size;
+            allocation_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            allocation_info.allocationSize = memory_requirements.size;
             allocation_info.memoryTypeIndex = memory_type_idx;
 
             if (auto res = vkAllocateMemory(m_device, &allocation_info, nullptr, &m_memory); res != VK_SUCCESS)
@@ -47,37 +49,51 @@ namespace arbor {
             if (auto res = vkBindBufferMemory(m_device, m_buffer, m_memory, 0); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to bind buffer memory: {}", string_VkResult(res)));
 
-            if (auto res = vkMapMemory(m_device, m_memory, 0, size, 0, &m_mapped); res != VK_SUCCESS)
-                return std::unexpected(fmt::format("failed to map device buffer memory: {}", string_VkResult(res)));
+            if (m_keep_mapped) {
+                if (auto res = vkMapMemory(m_device, m_memory, 0, size, 0, &m_mapped); res != VK_SUCCESS)
+                    return std::unexpected(fmt::format("failed to map device buffer memory: {}", string_VkResult(res)));
+            }
 
             return {};
         }
 
-        std::expected<void, std::string> renderer::device_buffer::write_data(const void* bytes, uint64_t size, VkQueue transfer_queue,
-                                                                             VkCommandPool command_pool) {
+        std::expected<void, std::string> renderer::device_buffer::write_data(const void* bytes, uint64_t size,
+                                                                             VkQueue transfer_queue, VkCommandPool command_pool) {
             if (!transfer_queue || !command_pool) {
+                if (!m_keep_mapped || !m_mapped) {
+                    if (auto res = vkMapMemory(m_device, m_memory, 0, size, 0, &m_mapped); res != VK_SUCCESS)
+                        return std::unexpected(fmt::format("failed to map device buffer memory: {}", string_VkResult(res)));
+                }
+
                 std::memcpy(m_mapped, bytes, size);
+
+                if (!m_keep_mapped) {
+                    vkUnmapMemory(m_device, m_memory);
+                    m_mapped = nullptr;
+                }
+
                 return {};
             }
 
             renderer::device_buffer staging_buffer;
             staging_buffer.make(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_device, m_physical_device);
+                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_device,
+                                m_physical_device);
 
             staging_buffer.write_data(bytes, size);
 
             free();
-            make(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_device,
-                 m_physical_device);
+            make(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                 m_device, m_physical_device);
 
             VkSubmitInfo submit_info{};
             VkCommandBufferBeginInfo begin_info{};
             VkCommandBufferAllocateInfo command_buffer_allocate_info{};
 
-            command_buffer_allocate_info.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
             command_buffer_allocate_info.commandBufferCount = 1;
-            command_buffer_allocate_info.commandPool        = command_pool;
-            command_buffer_allocate_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            command_buffer_allocate_info.commandPool = command_pool;
+            command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
             VkCommandBuffer command_buffer;
             if (auto res = vkAllocateCommandBuffers(m_device, &command_buffer_allocate_info, &command_buffer); res != VK_SUCCESS)
@@ -97,9 +113,9 @@ namespace arbor {
             if (auto res = vkEndCommandBuffer(command_buffer); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to end staging command buffer: {}", string_VkResult(res)));
 
-            submit_info.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
             submit_info.commandBufferCount = 1;
-            submit_info.pCommandBuffers    = &command_buffer;
+            submit_info.pCommandBuffers = &command_buffer;
 
             if (auto res = vkQueueSubmit(transfer_queue, 1, &submit_info, VK_NULL_HANDLE); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to stage buffer to GPU: {}", string_VkResult(res)));
@@ -138,8 +154,8 @@ namespace arbor {
             m_logger->trace("allocating a vertex buffer of {} vertices ({} bytes)", m_test_vertices.size(), size);
 
             if (auto res = vk.vertex_buffer.make(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vk.device,
-                                                 vk.physical_device.handle);
+                                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                                 vk.device, vk.physical_device.handle);
                 !res)
                 return res;
 
@@ -155,8 +171,8 @@ namespace arbor {
             m_logger->trace("allocating an index buffer of {} vertices ({} bytes)", m_test_indices.size(), size);
 
             if (auto res = vk.index_buffer.make(size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vk.device,
-                                                vk.physical_device.handle);
+                                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                                vk.device, vk.physical_device.handle);
                 !res)
                 return res;
 
@@ -174,7 +190,7 @@ namespace arbor {
             for (auto& buffer : vk.uniform_buffers) {
                 if (auto res = buffer.make(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vk.device,
-                                           vk.physical_device.handle);
+                                           vk.physical_device.handle, true);
                     !res) {
                     return res;
                 }

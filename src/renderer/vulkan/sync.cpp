@@ -18,14 +18,16 @@ namespace arbor {
             fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
             for (auto i = 0ull; i < vk.sync.frames_in_flight; i++) {
-                if (auto res = vkCreateSemaphore(vk.device, &semaphore_crate_info, nullptr, &vk.sync.wait_semaphores[i]); res != VK_SUCCESS)
+                if (auto res = vkCreateSemaphore(vk.device, &semaphore_crate_info, nullptr, &vk.sync.wait_semaphores[i]);
+                    res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create vulkan semaphores: {}", string_VkResult(res)));
 
                 if (auto res = vkCreateSemaphore(vk.device, &semaphore_crate_info, nullptr, &vk.sync.signal_semaphores[i]);
                     res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create vulkan semaphores: {}", string_VkResult(res)));
 
-                if (auto res = vkCreateFence(vk.device, &fence_create_info, nullptr, &vk.sync.in_flight_fences[i]); res != VK_SUCCESS)
+                if (auto res = vkCreateFence(vk.device, &fence_create_info, nullptr, &vk.sync.in_flight_fences[i]);
+                    res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create vulkan fences: {}", string_VkResult(res)));
             }
 

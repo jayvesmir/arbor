@@ -4,7 +4,6 @@
 
 #include <filesystem>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace arbor {
@@ -13,7 +12,6 @@ namespace arbor {
 
         class scene {
             friend class engine::instance;
-            friend class std::hash<engine::scene>;
 
             std::string m_name;
 

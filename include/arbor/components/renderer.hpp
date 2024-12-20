@@ -1,16 +1,14 @@
 #pragma once
 #include <expected>
 #include <filesystem>
-#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 #include "arbor/components/component.hpp"
 #include "arbor/engine.hpp"
-#include "arbor/logger_utils.hpp"
 #include "arbor/model.hpp"
+#include "arbor/scene/texture.hpp"
 #include "arbor/types.hpp"
 #include "arbor/window.hpp"
 
@@ -142,18 +140,20 @@ namespace arbor {
             };
 
             class device_buffer {
-                VkDevice m_device;
-                VkPhysicalDevice m_physical_device;
+                VkDevice m_device = VK_NULL_HANDLE;
+                VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
 
                 VkBuffer m_buffer = VK_NULL_HANDLE;
                 VkDeviceMemory m_memory = VK_NULL_HANDLE;
 
+                bool m_keep_mapped = false;
                 void* m_mapped = nullptr;
 
               public:
                 ~device_buffer();
                 std::expected<void, std::string> make(uint64_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-                                                      VkDevice device, VkPhysicalDevice physical_device);
+                                                      VkDevice device, VkPhysicalDevice physical_device,
+                                                      bool keep_mapped = false);
 
                 std::expected<void, std::string> write_data(const void* bytes, uint64_t size,
                                                             VkQueue transfer_queue = VK_NULL_HANDLE,
@@ -163,6 +163,32 @@ namespace arbor {
 
                 constexpr auto buffer() const { return &m_buffer; }
                 constexpr auto memory() const { return &m_memory; }
+            };
+
+            class texture {
+                VkDevice m_device;
+                VkPhysicalDevice m_physical_device;
+
+                renderer::device_buffer m_staging_buffer;
+                uint32_t m_width = 0, m_height = 0;
+
+                VkImage m_image = VK_NULL_HANDLE;
+                VkImageView m_image_view = VK_NULL_HANDLE;
+                VkDeviceMemory m_image_memory = VK_NULL_HANDLE;
+                VkSampler m_sampler = VK_NULL_HANDLE;
+
+                std::expected<void, std::string> transition_layout(engine::renderer& renderer, VkImageLayout old_layout,
+                                                                   VkImageLayout new_layout);
+
+              public:
+                ~texture();
+                texture() = default;
+                texture(VkDevice device, VkPhysicalDevice physical_device)
+                    : m_device(device), m_physical_device(physical_device) {}
+
+                void destroy();
+
+                std::expected<void, std::string> load(const engine::texture& source, engine::renderer& renderer);
             };
 
           private:
@@ -187,6 +213,7 @@ namespace arbor {
                     VkSwapchainKHR handle = VK_NULL_HANDLE;
                     VkSurfaceKHR surface = VK_NULL_HANDLE;
 
+                    uint32_t current_image;
                     std::vector<VkImage> images;
                     std::vector<VkImageView> image_views;
                     std::vector<VkFramebuffer> framebuffers;
@@ -203,13 +230,14 @@ namespace arbor {
 
                 VkCommandPool command_pool = VK_NULL_HANDLE;
                 std::vector<VkCommandBuffer> command_buffers;
+                std::vector<VkCommandBuffer> temporary_command_buffers;
 
                 renderer::device_buffer index_buffer;
                 renderer::device_buffer vertex_buffer;
                 std::vector<renderer::device_buffer> uniform_buffers;
 
                 struct {
-                    const uint32_t frames_in_flight = 1;
+                    const uint32_t frames_in_flight = 3;
 
                     uint32_t current_frame = 0;
                     std::vector<VkSemaphore> wait_semaphores;
@@ -225,6 +253,8 @@ namespace arbor {
 
             std::vector<renderer::pipeline> m_pipelines;
 
+            std::unordered_map<uint64_t, renderer::texture> m_textures;
+
             struct {
                 ImGuiContext* imgui_ctx = nullptr;
             } m_gui;
@@ -239,6 +269,8 @@ namespace arbor {
             const std::vector<uint32_t> m_test_indices = {
                 0, 2, 1, 1, 3, 0,
             };
+
+            engine::texture m_test_texture = {"assets/kitty.jpg"};
 
           public:
             renderer(engine::instance& parent);
@@ -256,9 +288,14 @@ namespace arbor {
             std::expected<uint32_t, std::string> acquire_image();
             std::expected<void, std::string> reload_swapchain();
             std::expected<void, std::string> update_ubos();
-
             std::expected<void, std::string> draw_gui();
+
+            std::expected<void, std::string> record_command_buffer();
+            std::expected<void, std::string> submit_and_present_current_command_buffer();
+
             std::expected<void, std::string> init_imgui();
+            std::expected<void, std::string> load_assets();
+
             std::expected<void, std::string> make_vk_instance();
             std::expected<void, std::string> make_vk_device();
             std::expected<void, std::string> make_vk_surface();
@@ -270,6 +307,9 @@ namespace arbor {
             std::expected<void, std::string> make_vertex_buffer();
             std::expected<void, std::string> make_index_buffer();
             std::expected<void, std::string> make_uniform_buffers();
+
+            std::expected<VkCommandBuffer, std::string> begin_temporary_command_buffer();
+            std::expected<void, std::string> submit_command_buffer(VkCommandBuffer command_buffer, VkQueue queue);
         };
     } // namespace engine
 } // namespace arbor

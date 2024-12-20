@@ -28,7 +28,7 @@ namespace arbor {
             SDL_Event m_current_event;
             SDL_Window* m_sdl_handle = nullptr;
 
-            constexpr static SDL_InitFlags m_init_flags     = SDL_INIT_EVENTS | SDL_INIT_VIDEO;
+            constexpr static SDL_InitFlags m_init_flags = SDL_INIT_EVENTS | SDL_INIT_VIDEO;
             constexpr static SDL_WindowFlags m_window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
 
           protected:
@@ -39,7 +39,7 @@ namespace arbor {
             window() = default;
             ~window();
 
-            window(window&&)      = delete;
+            window(window&&) = delete;
             window(const window&) = delete;
 
             auto poll_event() { return std::pair(SDL_PollEvent(&m_current_event), std::ref(m_current_event)); }

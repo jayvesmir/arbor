@@ -1,9 +1,7 @@
 #include "arbor/components/renderer.hpp"
 
-#include <chrono>
-#include <cstdlib>
-
 #include "arbor/model.hpp"
+#include "arbor/types.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
@@ -30,6 +28,7 @@ namespace arbor {
             vk.uniform_buffers.clear();
 
             m_pipelines.clear();
+            m_textures.clear();
 
             for (auto i = 0ull; i < vk.sync.frames_in_flight; i++) {
                 if (vk.sync.signal_semaphores[i] && vk.device) {
@@ -132,10 +131,42 @@ namespace arbor {
             if (auto res = init_imgui(); !res)
                 return res;
 
+            if (auto res = load_assets(); !res)
+                return res;
+
             return {};
         }
 
         std::expected<void, std::string> renderer::update() {
+            vkWaitForFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame], VK_TRUE, uint64_t(-1));
+
+            auto image_idx = acquire_image();
+            if (!image_idx)
+                return std::unexpected(image_idx.error());
+
+            if (*image_idx == uint32_t(-1))
+                return {};
+
+            vk.swapchain.current_image = *image_idx;
+
+            vkResetFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame]);
+            vkResetCommandBuffer(vk.command_buffers[vk.sync.current_frame], 0);
+
+            if (auto res = record_command_buffer(); !res)
+                return res;
+
+            if (auto res = submit_and_present_current_command_buffer(); !res)
+                return res;
+
+            update_ubos();
+
+            vk.sync.current_frame++;
+            vk.sync.current_frame %= vk.sync.frames_in_flight;
+
+            return {};
+        }
+
+        std::expected<void, std::string> renderer::record_command_buffer() {
             static VkClearValue background{
                 .color =
                     {
@@ -146,20 +177,6 @@ namespace arbor {
             VkRenderPassBeginInfo render_pass_begin_info{};
             VkCommandBufferBeginInfo cmd_buffer_begin_info{};
 
-            vkWaitForFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame], VK_TRUE, uint64_t(-1));
-
-            auto image_idx = acquire_image();
-            if (!image_idx)
-                return std::unexpected(image_idx.error());
-
-            if (*image_idx == uint32_t(-1))
-                return {};
-
-            vkResetFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame]);
-            vkResetCommandBuffer(vk.command_buffers[vk.sync.current_frame], 0);
-
-            update_ubos();
-
             cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
             if (auto res = vkBeginCommandBuffer(vk.command_buffers[vk.sync.current_frame], &cmd_buffer_begin_info);
@@ -168,7 +185,7 @@ namespace arbor {
 
             render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             render_pass_begin_info.renderPass = m_pipelines.back().render_pass();
-            render_pass_begin_info.framebuffer = vk.swapchain.framebuffers[*image_idx];
+            render_pass_begin_info.framebuffer = vk.swapchain.framebuffers[vk.swapchain.current_image];
             render_pass_begin_info.renderArea.extent = vk.swapchain.extent;
             render_pass_begin_info.clearValueCount = 1;
             render_pass_begin_info.pClearValues = &background;
@@ -193,6 +210,10 @@ namespace arbor {
 
             draw_gui();
 
+            return {};
+        }
+
+        std::expected<void, std::string> renderer::submit_and_present_current_command_buffer() {
             vkCmdEndRenderPass(vk.command_buffers[vk.sync.current_frame]);
 
             if (auto res = vkEndCommandBuffer(vk.command_buffers[vk.sync.current_frame]); res != VK_SUCCESS)
@@ -219,7 +240,7 @@ namespace arbor {
             vk.sync.present_info.pWaitSemaphores = &vk.sync.signal_semaphores[vk.sync.current_frame];
             vk.sync.present_info.swapchainCount = 1;
             vk.sync.present_info.pSwapchains = &vk.swapchain.handle;
-            vk.sync.present_info.pImageIndices = &*image_idx;
+            vk.sync.present_info.pImageIndices = &vk.swapchain.current_image;
 
             if (auto res = vkQueuePresentKHR(vk.present_queue, &vk.sync.present_info); res != VK_SUCCESS) {
                 if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR)
@@ -227,9 +248,6 @@ namespace arbor {
                 else
                     return std::unexpected(fmt::format("failed to present: {}", string_VkResult(res)));
             }
-
-            vk.sync.current_frame++;
-            vk.sync.current_frame %= vk.sync.frames_in_flight;
 
             return {};
         }
@@ -248,12 +266,12 @@ namespace arbor {
         std::expected<void, std::string> renderer::update_ubos() {
             static float rotation = glm::radians(90.0f);
 
-            rotation += m_parent.frame_time_ms() * glm::radians(0.25f);
+            rotation += m_parent.frame_time_ms() * glm::radians(0.1f);
 
             engine::mvp_ubo mvp;
 
             mvp.model = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
-            mvp.view = glm::lookAt(glm::vec3(2.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.view = glm::lookAt(glm::vec3(1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             mvp.projection = glm::perspective(
                 glm::radians(70.0f), static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
 

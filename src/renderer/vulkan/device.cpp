@@ -13,15 +13,18 @@
 
 namespace arbor {
     namespace engine {
-        std::expected<
-            std::tuple<VkPhysicalDevice, VkPhysicalDeviceFeatures, VkPhysicalDeviceProperties, detail::device_queue_family_indices>,
-            std::string>
+        std::expected<std::tuple<VkPhysicalDevice, VkPhysicalDeviceFeatures, VkPhysicalDeviceProperties,
+                                 detail::device_queue_family_indices>,
+                      std::string>
         find_physical_device(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface) {
             for (const auto& device : devices) {
                 VkPhysicalDeviceFeatures features;
                 VkPhysicalDeviceProperties properties;
                 vkGetPhysicalDeviceProperties(device, &properties);
                 vkGetPhysicalDeviceFeatures(device, &features);
+
+                if (!features.samplerAnisotropy)
+                    continue;
 
                 uint32_t n_queue_families = 0;
                 std::vector<VkQueueFamilyProperties> queue_families;
@@ -49,7 +52,7 @@ namespace arbor {
 
                 detail::device_queue_family_indices qf_indices = {
                     .graphics_family = static_cast<uint32_t>(std::distance(queue_families.begin(), graphics_qf_it)),
-                    .present_family  = static_cast<uint32_t>(std::distance(queue_families.begin(), present_qf_it)),
+                    .present_family = static_cast<uint32_t>(std::distance(queue_families.begin(), present_qf_it)),
                 };
 
                 return {{device, features, properties, qf_indices}};
@@ -69,9 +72,9 @@ namespace arbor {
                 return std::unexpected("failed to find a vulkan device");
 
             if (auto physical_device = find_physical_device(physical_devices, vk.swapchain.surface); physical_device) {
-                vk.physical_device.handle               = std::get<VkPhysicalDevice>(*physical_device);
-                vk.physical_device.features             = std::get<VkPhysicalDeviceFeatures>(*physical_device);
-                vk.physical_device.properties           = std::get<VkPhysicalDeviceProperties>(*physical_device);
+                vk.physical_device.handle = std::get<VkPhysicalDevice>(*physical_device);
+                vk.physical_device.features = std::get<VkPhysicalDeviceFeatures>(*physical_device);
+                vk.physical_device.properties = std::get<VkPhysicalDeviceProperties>(*physical_device);
                 vk.physical_device.queue_family_indices = std::get<detail::device_queue_family_indices>(*physical_device);
             } else
                 return std::unexpected(physical_device.error());
@@ -95,24 +98,25 @@ namespace arbor {
             float queue_priority = 1.0f;
             for (auto qf : qf_set) {
                 VkDeviceQueueCreateInfo queue_create_info{};
-                queue_create_info.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                queue_create_info.queueCount       = 1;
+                queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                queue_create_info.queueCount = 1;
                 queue_create_info.queueFamilyIndex = qf;
                 queue_create_info.pQueuePriorities = &queue_priority;
 
                 queue_create_infos.push_back(queue_create_info);
             }
 
-            create_info.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-            create_info.queueCreateInfoCount    = queue_create_infos.size();
-            create_info.pQueueCreateInfos       = queue_create_infos.data();
-            create_info.pEnabledFeatures        = &vk.physical_device.features;
-            create_info.enabledLayerCount       = vk.device_lay.size();
-            create_info.enabledExtensionCount   = vk.device_ext.size();
-            create_info.ppEnabledLayerNames     = vk.device_lay.data();
+            create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+            create_info.queueCreateInfoCount = queue_create_infos.size();
+            create_info.pQueueCreateInfos = queue_create_infos.data();
+            create_info.pEnabledFeatures = &vk.physical_device.features;
+            create_info.enabledLayerCount = vk.device_lay.size();
+            create_info.enabledExtensionCount = vk.device_ext.size();
+            create_info.ppEnabledLayerNames = vk.device_lay.data();
             create_info.ppEnabledExtensionNames = vk.device_ext.data();
 
-            m_logger->trace("creating a vulkan device with {} extensions: {}", vk.device_ext.size(), fmt::join(vk.device_ext, ", "));
+            m_logger->trace("creating a vulkan device with {} extensions: {}", vk.device_ext.size(),
+                            fmt::join(vk.device_ext, ", "));
             m_logger->trace("{} layers: {}", vk.device_lay.size(), fmt::join(vk.device_lay, ", "));
 
             if (auto res = vkCreateDevice(vk.physical_device.handle, &create_info, nullptr, &vk.device); res != VK_SUCCESS)
