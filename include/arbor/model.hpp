@@ -10,8 +10,8 @@
 
 namespace arbor {
     namespace engine {
-        struct vertex_2d {
-            glm::vec2 position;
+        struct vertex_3d {
+            glm::vec3 position;
             glm::vec3 color;
             glm::vec2 texture_coord;
 

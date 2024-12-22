@@ -263,11 +263,11 @@ namespace arbor {
                 ImGuiContext* imgui_ctx = nullptr;
             } m_gui;
 
-            const std::vector<engine::vertex_2d> m_test_vertices = {
-                {{-1.0f, -1.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
-                {{1.0f, 1.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
-                {{1.0f, -1.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
-                {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+            const std::vector<engine::vertex_3d> m_test_vertices = {
+                {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+                {{1.0f, 1.0f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+                {{1.0f, -1.0f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+                {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
             };
 
             const std::vector<uint32_t> m_test_indices = {
