@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_vulkan.h"
+#include "imgui_internal.h"
 
 namespace arbor {
     namespace engine {
@@ -13,7 +14,7 @@ namespace arbor {
                 ImGui::DestroyContext(m_gui.imgui_ctx);
 
             m_gui.imgui_ctx = ImGui::CreateContext();
-            ImGui::GetIO();
+            ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
 
             if (!ImGui_ImplSDL3_InitForVulkan(m_parent.window().sdl_handle()))
                 return std::unexpected(fmt::format("failed to initialize ImGui"));
@@ -48,11 +49,16 @@ namespace arbor {
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
 
+            auto& io = ImGui::GetIO();
+
+            ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+
             ImGui::Begin("scene info");
 
             ImGui::Text("scene: %s", m_parent.current_scene().name().c_str());
             ImGui::Text("frametime: %.03f ms", m_parent.frame_time_ms());
             ImGui::Text("framerate: %.03f", 1000.0f / m_parent.frame_time_ms());
+            ImGui::Text("avg. framerate: %.03f", io.Framerate);
 
             ImGui::End();
 
