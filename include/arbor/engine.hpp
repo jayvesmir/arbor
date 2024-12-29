@@ -26,7 +26,7 @@ namespace arbor {
             std::shared_ptr<spdlog::logger> m_logger;
 
             engine::window m_window;
-            std::vector<std::unique_ptr<engine::component>> m_components;
+            std::unordered_map<engine::component::etype, std::unique_ptr<engine::component>> m_components;
 
             std::atomic<bool> m_running;
             std::unordered_map<std::string, engine::scene> m_scenes;

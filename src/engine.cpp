@@ -13,7 +13,7 @@ namespace arbor {
         }
 
         instance::~instance() {
-            for (auto& component : m_components) {
+            for (auto& [type, component] : m_components) {
                 m_logger->debug("destroying '{}'", component->identifier());
                 component->shutdown();
             }
@@ -30,7 +30,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> instance::initialize_components() {
-            for (auto& component : m_components) {
+            for (auto& [type, component] : m_components) {
                 m_logger->debug("initializing '{}'", component->identifier());
 
                 if (auto res = component->init(); !res) {
@@ -46,7 +46,7 @@ namespace arbor {
             if (auto res = create_window(m_config.window.width, m_config.window.height, m_config.window.title); !res)
                 return res;
 
-            m_components.push_back(std::make_unique<engine::renderer>(*this));
+            m_components[component::renderer] = std::make_unique<engine::renderer>(*this);
 
             return {};
         }
@@ -79,7 +79,7 @@ namespace arbor {
                 while (m_window.poll_event().first)
                     process_window_event(m_window.current_event());
 
-                for (const auto& component : m_components) {
+                for (const auto& [type, component] : m_components) {
                     if (auto res = component->update(); !res) {
                         m_logger->critical("'{}' failed to update: {}", component->identifier(), res.error());
                         m_running = false;
@@ -103,10 +103,7 @@ namespace arbor {
             }
 
             if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-                auto renderer_it = std::ranges::find_if(
-                    m_components, [](const auto& component) { return component->type() == engine::component::etype::renderer; });
-
-                auto renderer = dynamic_cast<engine::renderer*>(renderer_it->get());
+                auto renderer = dynamic_cast<engine::renderer*>(m_components.at(component::etype::renderer).get());
                 renderer->resize_viewport();
             }
 
