@@ -138,6 +138,11 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::update() {
+            if (vk.deferred_swapchain_reload) {
+                reload_swapchain();
+                vk.deferred_swapchain_reload = false;
+            }
+
             vkWaitForFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame], VK_TRUE, uint64_t(-1));
 
             auto image_idx = acquire_image();

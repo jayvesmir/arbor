@@ -251,6 +251,12 @@ namespace arbor {
                     VkPresentInfoKHR present_info{};
                 } sync;
 
+                struct {
+                    VkPresentModeKHR present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
+                } config;
+
+                std::atomic<bool> deferred_swapchain_reload = false;
+
                 std::vector<const char*> device_ext;
                 std::vector<const char*> device_lay;
             } vk;

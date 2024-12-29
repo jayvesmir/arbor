@@ -45,6 +45,22 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::draw_gui() {
+            static std::unordered_map<const char*, VkPresentModeKHR> present_modes = {
+                {"immediate", VK_PRESENT_MODE_IMMEDIATE_KHR},
+                {"mailbox", VK_PRESENT_MODE_MAILBOX_KHR},
+                {"fifo", VK_PRESENT_MODE_FIFO_KHR},
+                {"fifo (relaxed)", VK_PRESENT_MODE_FIFO_RELAXED_KHR},
+                {"shared demand", VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR},
+                {"shared continuous refresh", VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR},
+                {"latest ready", VK_PRESENT_MODE_FIFO_LATEST_READY_EXT},
+            };
+
+            static const char* const present_modes_opt[] = {
+                "immediate", "mailbox", "fifo", "fifo (relaxed)", "shared demand", "shared continuous refresh", "latest ready",
+            };
+
+            static int32_t current_present_mode_idx = 1;
+
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
@@ -53,12 +69,24 @@ namespace arbor {
 
             ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 
-            ImGui::Begin("scene info");
+            ImGui::SetNextWindowPos({50, 50}, ImGuiCond_Once);
+
+            ImGui::Begin("arbor menu", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+            ImGui::SeparatorText("statistics");
 
             ImGui::Text("scene: %s", m_parent.current_scene().name().c_str());
             ImGui::Text("frametime: %.03f ms", m_parent.frame_time_ms());
             ImGui::Text("framerate: %.03f", 1000.0f / m_parent.frame_time_ms());
             ImGui::Text("avg. framerate: %.03f", io.Framerate);
+
+            ImGui::SeparatorText("config");
+
+            if (ImGui::Combo("presentation mode", &current_present_mode_idx, present_modes_opt,
+                             IM_ARRAYSIZE(present_modes_opt))) {
+                vk.config.present_mode = present_modes[present_modes_opt[current_present_mode_idx]];
+                vk.deferred_swapchain_reload = true;
+            }
 
             ImGui::End();
 
