@@ -5,7 +5,7 @@
 #include <set>
 #include <tuple>
 
-#include "fmt/base.h"
+#include "fmt/format.h"
 #include "fmt/ranges.h"
 
 #include "vulkan/vk_enum_string_helper.h"
