@@ -79,6 +79,7 @@ namespace arbor {
             ImGui::Text("frametime: %.03f ms", m_parent.frame_time_ms());
             ImGui::Text("framerate: %.03f", 1000.0f / m_parent.frame_time_ms());
             ImGui::Text("avg. framerate: %.03f", io.Framerate);
+            ImGui::Text("frame n: %llu", m_parent.frame_count());
 
             ImGui::SeparatorText("config");
 

@@ -23,6 +23,12 @@ namespace arbor {
                 uint32_t graphics_family;
                 uint32_t present_family;
             };
+
+            struct mvp {
+                glm::mat4 model;
+                glm::mat4 view;
+                glm::mat4 projection;
+            };
         } // namespace detail
 
         class renderer : public engine::component {

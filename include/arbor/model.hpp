@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include <string>
+#include <vector>
 
 #include "arbor/types.hpp"
 
@@ -18,10 +18,9 @@ namespace arbor {
             static std::pair<VkVertexInputBindingDescription, std::array<VkVertexInputAttributeDescription, 3>> make_vk_binding();
         };
 
-        struct mvp_ubo {
-            glm::mat4 model;
-            glm::mat4 view;
-            glm::mat4 projection;
+        struct model_3d {
+            std::vector<vertex_3d> vertices;
+            std::vector<uint16_t> indices;
         };
     } // namespace engine
 } // namespace arbor

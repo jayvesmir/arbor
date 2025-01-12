@@ -58,12 +58,15 @@ namespace arbor {
         }
 
         std::expected<void, std::string> instance::run(const engine::application_config& app_config) {
+            if (m_running)
+                return std::unexpected("already running");
+
             m_config = app_config;
             if (auto res = create_app(); !res)
                 return res;
 
-            if (!m_current_scene || !m_scenes.contains(current_scene().name()))
-                return std::unexpected("failed to run arbor: no scene loaded");
+            if (m_config.callbacks.on_init)
+                std::invoke(*m_config.callbacks.on_init, *this);
 
             if (auto res = initialize_components(); !res)
                 return res;
@@ -71,24 +74,43 @@ namespace arbor {
             m_running = true;
             m_running.notify_all();
 
-            auto frame_start = std::chrono::high_resolution_clock::now();
-
             while (m_running) {
-                frame_start = std::chrono::high_resolution_clock::now();
+                const auto frame_start = std::chrono::high_resolution_clock::now();
 
                 while (m_window.poll_event().first)
                     process_window_event(m_window.current_event());
 
-                for (const auto& [type, component] : m_components) {
-                    if (auto res = component->update(); !res) {
-                        m_logger->critical("'{}' failed to update: {}", component->identifier(), res.error());
-                        m_running = false;
-                        return res;
+                if (auto res = invoke_callbacks(); !res)
+                    m_logger->critical("failed to invoke callbacks: {}", res.error());
+
+                if (m_current_scene) {
+                    for (const auto& [type, component] : m_components) {
+                        if (auto res = component->update(); !res) {
+                            m_logger->critical("'{}' failed to update: {}", component->identifier(), res.error());
+                            m_running = false;
+                            return res;
+                        }
                     }
                 }
 
                 m_frame_count++;
-                m_frame_time_ms = (std::chrono::high_resolution_clock::now() - frame_start).count() * 1e-6;
+                m_frame_time_ns = (std::chrono::high_resolution_clock::now() - frame_start).count();
+            }
+
+            return {};
+        }
+
+        std::expected<void, std::string> instance::invoke_callbacks() {
+            if (m_config.callbacks.on_update) {
+                std::invoke(*m_config.callbacks.on_update, *this);
+            }
+
+            if (m_current_scene) {
+                for (auto& object : m_current_scene.value()->second.objects()) {
+                    if (object.callbacks().on_update.has_value()) {
+                        std::invoke(*object.callbacks().on_update, *this);
+                    }
+                }
             }
 
             return {};

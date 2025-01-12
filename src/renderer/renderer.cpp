@@ -160,10 +160,10 @@ namespace arbor {
             if (auto res = record_command_buffer(); !res)
                 return res;
 
+            update_ubos();
+
             if (auto res = submit_and_present_current_command_buffer(); !res)
                 return res;
-
-            update_ubos();
 
             vk.sync.current_frame++;
             vk.sync.current_frame %= vk.sync.frames_in_flight;
@@ -179,13 +179,15 @@ namespace arbor {
                     },
             };
 
+            static VkCommandBufferBeginInfo cmd_buffer_begin_info{
+                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+            };
+
+            const auto& current_cmd_buf = vk.command_buffers[vk.sync.current_frame];
+
             VkRenderPassBeginInfo render_pass_begin_info{};
-            VkCommandBufferBeginInfo cmd_buffer_begin_info{};
 
-            cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-            if (auto res = vkBeginCommandBuffer(vk.command_buffers[vk.sync.current_frame], &cmd_buffer_begin_info);
-                res != VK_SUCCESS)
+            if (auto res = vkBeginCommandBuffer(current_cmd_buf, &cmd_buffer_begin_info); res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to begin recording a command buffer: {}", string_VkResult(res)));
 
             render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -195,23 +197,21 @@ namespace arbor {
             render_pass_begin_info.clearValueCount = 1;
             render_pass_begin_info.pClearValues = &background;
 
-            vkCmdBeginRenderPass(vk.command_buffers[vk.sync.current_frame], &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderPass(current_cmd_buf, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
-            vkCmdBindPipeline(vk.command_buffers[vk.sync.current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              m_pipelines.back().pipeline_handle());
+            vkCmdBindPipeline(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().pipeline_handle());
 
             VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers(vk.command_buffers[vk.sync.current_frame], 0, 1, vk.vertex_buffer.buffer(), &offset);
-            vkCmdBindIndexBuffer(vk.command_buffers[vk.sync.current_frame], *vk.index_buffer.buffer(), 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindVertexBuffers(current_cmd_buf, 0, 1, vk.vertex_buffer.buffer(), &offset);
+            vkCmdBindIndexBuffer(current_cmd_buf, *vk.index_buffer.buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-            vkCmdSetViewport(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().viewports());
-            vkCmdSetScissor(vk.command_buffers[vk.sync.current_frame], 0, 1, m_pipelines.back().scissors());
+            vkCmdSetViewport(current_cmd_buf, 0, 1, m_pipelines.back().viewports());
+            vkCmdSetScissor(current_cmd_buf, 0, 1, m_pipelines.back().scissors());
 
-            vkCmdBindDescriptorSets(vk.command_buffers[vk.sync.current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    m_pipelines.back().m_pipeline_layout, 0, 1,
+            vkCmdBindDescriptorSets(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().m_pipeline_layout, 0, 1,
                                     &m_pipelines.back().m_descriptor_sets[vk.sync.current_frame], 0, nullptr);
 
-            vkCmdDrawIndexed(vk.command_buffers[vk.sync.current_frame], m_test_indices.size(), 1, 0, 0, 0);
+            vkCmdDrawIndexed(current_cmd_buf, m_test_indices.size(), 1, 0, 0, 0);
 
             draw_gui();
 
@@ -275,7 +275,7 @@ namespace arbor {
             rotation += m_parent.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
             position += m_parent.frame_time_ms() * (0.005f / 2.0f);
 
-            engine::mvp_ubo mvp;
+            engine::detail::mvp mvp;
 
             mvp.model = glm::mat4(1.0f);
             mvp.model = glm::translate(mvp.model, glm::vec3(glm::sin(position), glm::cos(position), 0.0f));

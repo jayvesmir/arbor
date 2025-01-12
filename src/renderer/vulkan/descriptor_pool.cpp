@@ -75,7 +75,7 @@ namespace arbor {
 
                 buffer_info.buffer = *m_parent.vk.uniform_buffers[i].buffer();
                 buffer_info.offset = 0;
-                buffer_info.range = sizeof(engine::mvp_ubo);
+                buffer_info.range = sizeof(engine::detail::mvp);
 
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 image_info.imageView = m_parent.m_textures.at(0).image_view();

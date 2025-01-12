@@ -183,7 +183,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::make_uniform_buffers() {
-            auto size = sizeof(engine::mvp_ubo);
+            auto size = sizeof(engine::detail::mvp);
 
             vk.uniform_buffers.resize(vk.sync.frames_in_flight);
 

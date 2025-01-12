@@ -1,9 +1,10 @@
 #pragma once
+#include "arbor/scene/asset_manager.hpp"
 #include "arbor/scene/object.hpp"
-#include "arbor/scene/texture.hpp"
 
 #include <filesystem>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace arbor {
@@ -18,6 +19,7 @@ namespace arbor {
             std::filesystem::path m_vertex_shader;
             std::filesystem::path m_fragment_shader;
 
+            engine::asset_manager m_asset_manager;
             std::vector<engine::object> m_objects;
 
           public:
@@ -37,6 +39,7 @@ namespace arbor {
             constexpr auto erase_object(const std::vector<engine::object>::const_iterator it) { m_objects.erase(it); }
 
             constexpr auto& name() const { return m_name; }
+            constexpr auto& objects() { return m_objects; }
             constexpr auto& objects() const { return m_objects; }
         };
     } // namespace engine
