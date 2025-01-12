@@ -10,6 +10,8 @@ namespace arbor {
             callback_config m_callbacks;
 
           public:
+            object(uint64_t id = -1) : m_id(id) {}
+
             constexpr auto id() const { return m_id; }
 
             constexpr auto& callbacks() { return m_callbacks; }

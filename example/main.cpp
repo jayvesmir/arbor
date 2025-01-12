@@ -8,6 +8,11 @@ void init(arbor::engine::instance& engine) {
     scene.vertex_shader("example/shaders/basic.vert");
     scene.fragment_shader("example/shaders/basic.frag");
 
+    //                                   blah blah blah
+    auto plane_id = scene.create_object().value();
+
+    scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty.jpg"};
+
     engine.push_scene_and_set_current(scene);
 }
 

@@ -68,6 +68,9 @@ namespace arbor {
             if (m_config.callbacks.on_init)
                 std::invoke(*m_config.callbacks.on_init, *this);
 
+            if (!m_current_scene || !m_scenes.contains(current_scene().name()))
+                return std::unexpected("failed to run arbor: no scene loaded");
+
             if (auto res = initialize_components(); !res)
                 return res;
 
@@ -106,7 +109,7 @@ namespace arbor {
             }
 
             if (m_current_scene) {
-                for (auto& object : m_current_scene.value()->second.objects()) {
+                for (auto& [id, object] : m_current_scene.value()->second.objects()) {
                     if (object.callbacks().on_update.has_value()) {
                         std::invoke(*object.callbacks().on_update, *this);
                     }

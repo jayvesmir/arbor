@@ -30,7 +30,7 @@ namespace arbor {
 
             std::atomic<bool> m_running;
             std::unordered_map<std::string, engine::scene> m_scenes;
-            std::optional<std::unordered_map<std::string, engine::scene>::const_iterator> m_current_scene;
+            std::optional<std::unordered_map<std::string, engine::scene>::iterator> m_current_scene;
 
             uint64_t m_frame_count = 0;
             double m_frame_time_ns = 0;
@@ -51,8 +51,8 @@ namespace arbor {
 
             constexpr auto& scenes() { return m_scenes; }
             constexpr auto& scenes() const { return m_scenes; }
-            auto& current_scene() { return (m_current_scene.value_or(m_scenes.begin()))->second; }
-            auto& current_scene() const { return (m_current_scene.value_or(m_scenes.begin()))->second; }
+            auto& current_scene() { return m_current_scene.value()->second; }
+            auto& current_scene() const { return m_current_scene.value()->second; }
 
           protected:
             constexpr auto& window() { return m_window; }

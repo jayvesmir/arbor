@@ -9,13 +9,19 @@ namespace arbor {
         std::expected<void, std::string> renderer::load_assets() {
             m_logger->debug("loading assets onto GPU");
 
-            if (auto res = m_test_texture.load(); !res)
-                return res;
+            for (auto& [id, object] : m_parent.current_scene().objects()) {
+                auto& asset_library_entry = m_parent.current_scene().asset_library()[id];
 
-            m_textures[0] = {vk.device, vk.physical_device.handle};
+                for (auto& [type, texture] : asset_library_entry.textures) {
+                    if (auto res = texture.load(); !res)
+                        return res;
 
-            if (auto res = m_textures[0].load(m_test_texture, *this); !res)
-                return res;
+                    m_textures[id][type] = {vk.device, vk.physical_device.handle};
+
+                    if (auto res = m_textures[id][type].load(texture, *this); !res)
+                        return res;
+                }
+            }
 
             return {};
         }

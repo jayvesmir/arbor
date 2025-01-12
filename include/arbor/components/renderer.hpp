@@ -269,7 +269,7 @@ namespace arbor {
 
             std::vector<renderer::pipeline> m_pipelines;
 
-            std::unordered_map<uint64_t, renderer::texture> m_textures;
+            std::unordered_map<uint64_t, std::unordered_map<engine::texture::etype, renderer::texture>> m_textures;
 
             struct {
                 ImGuiContext* imgui_ctx = nullptr;
@@ -285,8 +285,6 @@ namespace arbor {
             const std::vector<uint32_t> m_test_indices = {
                 0, 2, 1, 1, 3, 0,
             };
-
-            engine::texture m_test_texture = {"assets/kitty.jpg"};
 
           public:
             renderer(engine::instance& parent);

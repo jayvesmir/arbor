@@ -78,8 +78,11 @@ namespace arbor {
                 buffer_info.range = sizeof(engine::detail::mvp);
 
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                image_info.imageView = m_parent.m_textures.at(0).image_view();
-                image_info.sampler = m_parent.m_textures.at(0).sampler();
+
+                // TODO: actually handle properly
+                const auto texture_id = m_parent.m_textures.begin()->first;
+                image_info.imageView = m_parent.m_textures.at(texture_id).at(engine::texture::albedo).image_view();
+                image_info.sampler = m_parent.m_textures.at(texture_id).at(engine::texture::albedo).sampler();
 
                 writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 writes[0].dstSet = m_descriptor_sets[i];
