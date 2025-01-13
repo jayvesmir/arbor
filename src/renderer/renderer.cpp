@@ -23,8 +23,8 @@ namespace arbor {
             if (vk.device)
                 vkDeviceWaitIdle(vk.device);
 
-            vk.vertex_buffer.free();
             vk.index_buffer.free();
+            vk.vertex_buffers.clear();
             vk.uniform_buffers.clear();
 
             m_pipelines.clear();
@@ -110,7 +110,7 @@ namespace arbor {
             if (auto res = make_vk_device(); !res)
                 return res;
 
-            if (auto res = make_vertex_buffer(); !res)
+            if (auto res = make_vertex_buffers(); !res)
                 return res;
 
             if (auto res = make_index_buffer(); !res)
@@ -201,8 +201,23 @@ namespace arbor {
 
             vkCmdBindPipeline(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().pipeline_handle());
 
-            VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers(current_cmd_buf, 0, 1, vk.vertex_buffer.buffer(), &offset);
+            static std::vector<VkBuffer> vertex_buffer_handles;
+            static std::vector<VkDeviceSize> vertex_buffer_offsets;
+            vertex_buffer_handles.resize(vk.vertex_buffers.size());
+            vertex_buffer_offsets.resize(vk.vertex_buffers.size());
+
+            // TODO: only reload this on scene change
+            for (auto i = 0; i < vk.vertex_buffers.size(); i++) {
+                vertex_buffer_handles[i] = *vk.vertex_buffers[i].buffer();
+
+                if (i == 0)
+                    vertex_buffer_offsets[i] = 0;
+                else
+                    vertex_buffer_offsets[i] = vk.vertex_buffers[i - 1].size();
+            }
+
+            vkCmdBindVertexBuffers(current_cmd_buf, 0, vk.vertex_buffers.size(), vertex_buffer_handles.data(),
+                                   vertex_buffer_offsets.data());
             vkCmdBindIndexBuffer(current_cmd_buf, *vk.index_buffer.buffer(), 0, VK_INDEX_TYPE_UINT32);
 
             vkCmdSetViewport(current_cmd_buf, 0, 1, m_pipelines.back().viewports());
@@ -211,7 +226,12 @@ namespace arbor {
             vkCmdBindDescriptorSets(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().m_pipeline_layout, 0, 1,
                                     &m_pipelines.back().m_descriptor_sets[vk.sync.current_frame], 0, nullptr);
 
-            vkCmdDrawIndexed(current_cmd_buf, m_test_indices.size(), 1, 0, 0, 0);
+            uint32_t index_offset = 0;
+            for (auto& [id, object] : m_parent.current_scene().objects()) {
+                vkCmdDrawIndexed(current_cmd_buf, m_parent.current_scene().asset_library()[id].model.indices.size(), 1,
+                                 index_offset, 0, 0);
+                index_offset += m_parent.current_scene().asset_library()[id].model.indices.size();
+            }
 
             draw_gui();
 

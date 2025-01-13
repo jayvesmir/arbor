@@ -16,6 +16,9 @@ namespace arbor {
                     if (auto res = texture.load(); !res)
                         return res;
 
+                    m_logger->debug("loading a {}x{} texture ({} bytes)", texture.width(), texture.height(),
+                                    texture.pixels().size() * sizeof(*texture.pixels().begin()));
+
                     m_textures[id][type] = {vk.device, vk.physical_device.handle};
 
                     if (auto res = m_textures[id][type].load(texture, *this); !res)

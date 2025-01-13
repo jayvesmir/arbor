@@ -11,6 +11,17 @@ void init(arbor::engine::instance& engine) {
     //                                   blah blah blah
     auto plane_id = scene.create_object().value();
 
+    scene.asset_library()[plane_id].model.vertices = {
+        {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+        {{1.0f, 1.0f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+        {{1.0f, -1.0f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+        {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+    };
+
+    scene.asset_library()[plane_id].model.indices = {
+        0, 2, 1, 1, 3, 0,
+    };
+
     scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty.jpg"};
 
     engine.push_scene_and_set_current(scene);

@@ -20,7 +20,7 @@ namespace arbor {
 
         struct model_3d {
             std::vector<vertex_3d> vertices;
-            std::vector<uint16_t> indices;
+            std::vector<uint32_t> indices;
         };
     } // namespace engine
 } // namespace arbor

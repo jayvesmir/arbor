@@ -76,10 +76,9 @@ namespace arbor {
             ImGui::SeparatorText("statistics");
 
             ImGui::Text("scene: %s", m_parent.current_scene().name().c_str());
-            ImGui::Text("frametime: %.03f ms", m_parent.frame_time_ms());
-            ImGui::Text("framerate: %.03f", 1000.0f / m_parent.frame_time_ms());
-            ImGui::Text("avg. framerate: %.03f", io.Framerate);
-            ImGui::Text("frame n: %llu", m_parent.frame_count());
+            ImGui::Text("frametime: %.03f ms (%.03f ms avg.)", m_parent.frame_time_ms(), 1000.f / io.Framerate);
+            ImGui::Text("framerate: %.03f (%.03f avg.)", 1000.0f / m_parent.frame_time_ms(), io.Framerate);
+            ImGui::Text("frames drawn: %llu", m_parent.frame_count());
 
             ImGui::SeparatorText("config");
 

@@ -152,6 +152,7 @@ namespace arbor {
                 VkBuffer m_buffer = VK_NULL_HANDLE;
                 VkDeviceMemory m_memory = VK_NULL_HANDLE;
 
+                uint64_t m_size = 0;
                 bool m_keep_mapped = false;
                 void* m_mapped = nullptr;
 
@@ -167,7 +168,10 @@ namespace arbor {
 
                 void free();
 
+                constexpr auto size() const { return m_size; }
+                constexpr auto buffer() { return &m_buffer; }
                 constexpr auto buffer() const { return &m_buffer; }
+                constexpr auto memory() { return &m_memory; }
                 constexpr auto memory() const { return &m_memory; }
             };
 
@@ -243,7 +247,7 @@ namespace arbor {
                 std::vector<VkCommandBuffer> temporary_command_buffers;
 
                 renderer::device_buffer index_buffer;
-                renderer::device_buffer vertex_buffer;
+                std::vector<renderer::device_buffer> vertex_buffers;
                 std::vector<renderer::device_buffer> uniform_buffers;
 
                 struct {
@@ -274,17 +278,6 @@ namespace arbor {
             struct {
                 ImGuiContext* imgui_ctx = nullptr;
             } m_gui;
-
-            const std::vector<engine::vertex_3d> m_test_vertices = {
-                {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
-                {{1.0f, 1.0f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
-                {{1.0f, -1.0f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
-                {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-            };
-
-            const std::vector<uint32_t> m_test_indices = {
-                0, 2, 1, 1, 3, 0,
-            };
 
           public:
             renderer(engine::instance& parent);
@@ -318,7 +311,7 @@ namespace arbor {
             std::expected<void, std::string> make_vk_command_pool_and_buffers();
             std::expected<void, std::string> make_sync_objects();
 
-            std::expected<void, std::string> make_vertex_buffer();
+            std::expected<void, std::string> make_vertex_buffers();
             std::expected<void, std::string> make_index_buffer();
             std::expected<void, std::string> make_uniform_buffers();
 

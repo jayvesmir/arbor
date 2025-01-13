@@ -15,6 +15,7 @@ namespace arbor {
             m_keep_mapped = keep_mapped;
             m_device = device;
             m_physical_device = physical_device;
+            m_size = size;
 
             create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             create_info.size = size;
@@ -148,27 +149,45 @@ namespace arbor {
             free();
         }
 
-        std::expected<void, std::string> renderer::make_vertex_buffer() {
-            auto size = m_test_vertices.size() * sizeof(m_test_vertices[0]);
+        std::expected<void, std::string> renderer::make_vertex_buffers() {
+            const auto& scene = m_parent.current_scene();
+            const auto& asset_libary = scene.asset_library();
 
-            m_logger->trace("allocating a vertex buffer of {} vertices ({} bytes)", m_test_vertices.size(), size);
+            for (auto& [id, object] : scene.objects()) {
+                auto size = asset_libary.at(id).model.vertices.size() * sizeof(*asset_libary.at(id).model.vertices.begin());
 
-            if (auto res = vk.vertex_buffer.make(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                                 vk.device, vk.physical_device.handle);
-                !res)
-                return res;
+                m_logger->trace("allocating a vertex buffer of {} vertices ({} bytes)", asset_libary.at(id).model.vertices.size(),
+                                size);
 
-            if (auto res = vk.vertex_buffer.write_data(m_test_vertices.data(), size, vk.graphics_queue, vk.command_pool); !res)
-                return res;
+                vk.vertex_buffers.emplace_back();
+                if (auto res =
+                        vk.vertex_buffers.back().make(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                                      vk.device, vk.physical_device.handle);
+                    !res) {
+                    return res;
+                }
+
+                if (auto res = vk.vertex_buffers.back().write_data(asset_libary.at(id).model.vertices.data(), size,
+                                                                   vk.graphics_queue, vk.command_pool);
+                    !res)
+                    return res;
+            }
 
             return {};
         }
 
         std::expected<void, std::string> renderer::make_index_buffer() {
-            auto size = m_test_indices.size() * sizeof(m_test_indices[0]);
+            uint64_t size = 0;
+            std::vector<uint32_t> indices;
+            for (auto [id, object] : m_parent.current_scene().objects()) {
+                size += m_parent.current_scene().asset_library()[id].model.indices.size() *
+                        sizeof(*m_parent.current_scene().asset_library()[id].model.indices.begin());
 
-            m_logger->trace("allocating an index buffer of {} vertices ({} bytes)", m_test_indices.size(), size);
+                indices.append_range(m_parent.current_scene().asset_library()[id].model.indices);
+            }
+
+            m_logger->trace("allocating an index buffer of {} vertices ({} bytes)", indices.size(), size);
 
             if (auto res = vk.index_buffer.make(size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -176,7 +195,7 @@ namespace arbor {
                 !res)
                 return res;
 
-            if (auto res = vk.index_buffer.write_data(m_test_indices.data(), size, vk.graphics_queue, vk.command_pool); !res)
+            if (auto res = vk.index_buffer.write_data(indices.data(), size, vk.graphics_queue, vk.command_pool); !res)
                 return res;
 
             return {};
