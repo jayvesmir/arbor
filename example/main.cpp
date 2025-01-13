@@ -13,10 +13,10 @@ void init(arbor::engine::instance& engine) {
         auto plane_id = scene.create_object().value();
 
         scene.asset_library()[plane_id].model.vertices = {
-            {{-1.0f, -1.0f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
-            {{1.0f, 1.0f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
-            {{1.0f, -1.0f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
-            {{-1.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
         };
 
         scene.asset_library()[plane_id].model.indices = {
@@ -64,6 +64,134 @@ void init(arbor::engine::instance& engine) {
             rotation += engine.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
 
             self.transform() = glm::mat4(1.0f);
+            self.transform() = glm::rotate(self.transform(), rotation, glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(0.0f, 1.0f, 1.0f);
+        };
+    }
+
+    {
+        //                                   blah blah blah
+        auto plane_id = scene.create_object().value();
+
+        scene.asset_library()[plane_id].model.vertices = {
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        };
+
+        scene.asset_library()[plane_id].model.indices = {
+            0, 2, 1, 1, 3, 0,
+        };
+
+        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty.jpg"};
+
+        scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
+            auto& self = engine.current_scene().objects()[id];
+
+            static float rotation = 0.0f;
+            static float position = 5.0f;
+
+            rotation += engine.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
+            position += engine.frame_time_ms() * (0.005f / 2.0f);
+
+            self.transform() = glm::mat4(1.0f);
+            self.transform() = glm::translate(self.transform(), glm::vec3(glm::sin(position), glm::cos(position), 0.0f));
+            self.transform() = glm::rotate(self.transform(), rotation, glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(0.0f, 1.0f, 1.0f);
+        };
+    }
+
+    {
+        //                                   blah blah blah
+        auto plane_id = scene.create_object().value();
+
+        scene.asset_library()[plane_id].model.vertices = {
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        };
+
+        scene.asset_library()[plane_id].model.indices = {
+            0, 2, 1, 1, 3, 0,
+        };
+
+        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty.jpg"};
+
+        scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
+            auto& self = engine.current_scene().objects()[id];
+
+            static float rotation = 0.0f;
+            static float position = 10.0f;
+
+            rotation += engine.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
+            position += engine.frame_time_ms() * (0.005f / 2.0f);
+
+            self.transform() = glm::mat4(1.0f);
+            self.transform() = glm::translate(self.transform(), glm::vec3(glm::sin(position), glm::cos(position), 0.0f));
+            self.transform() = glm::rotate(self.transform(), rotation, glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(0.0f, 1.0f, 1.0f);
+        };
+    }
+
+    {
+        //                                   blah blah blah
+        auto plane_id = scene.create_object().value();
+
+        scene.asset_library()[plane_id].model.vertices = {
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        };
+
+        scene.asset_library()[plane_id].model.indices = {
+            0, 2, 1, 1, 3, 0,
+        };
+
+        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty.jpg"};
+
+        scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
+            auto& self = engine.current_scene().objects()[id];
+
+            static float rotation = 0.0f;
+            static float position = 15.0f;
+
+            rotation += engine.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
+            position += engine.frame_time_ms() * (0.005f / 2.0f);
+
+            self.transform() = glm::mat4(1.0f);
+            self.transform() = glm::translate(self.transform(), glm::vec3(glm::sin(position), glm::cos(position), 0.0f));
+            self.transform() = glm::rotate(self.transform(), rotation, glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(0.0f, 1.0f, 1.0f);
+        };
+    }
+
+    {
+        //                                   blah blah blah
+        auto plane_id = scene.create_object().value();
+
+        scene.asset_library()[plane_id].model.vertices = {
+            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
+            {{0.5f, -0.5f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
+            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        };
+
+        scene.asset_library()[plane_id].model.indices = {
+            0, 2, 1, 1, 3, 0,
+        };
+
+        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty.jpg"};
+
+        scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
+            auto& self = engine.current_scene().objects()[id];
+
+            static float rotation = 0.0f;
+            static float position = 20.0f;
+
+            rotation += engine.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
+            position += engine.frame_time_ms() * (0.005f / 2.0f);
+
+            self.transform() = glm::mat4(1.0f);
+            self.transform() = glm::translate(self.transform(), glm::vec3(glm::sin(position), glm::cos(position), 0.0f));
             self.transform() = glm::rotate(self.transform(), rotation, glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(0.0f, 1.0f, 1.0f);
         };
     }
