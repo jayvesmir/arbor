@@ -111,7 +111,7 @@ namespace arbor {
             if (m_current_scene) {
                 for (auto& [id, object] : m_current_scene.value()->second.objects()) {
                     if (object.callbacks().on_update.has_value()) {
-                        std::invoke(*object.callbacks().on_update, *this);
+                        std::invoke(*object.callbacks().on_update, *this, id);
                     }
                 }
             }

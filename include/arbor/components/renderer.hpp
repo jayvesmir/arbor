@@ -247,7 +247,7 @@ namespace arbor {
                 std::vector<VkCommandBuffer> temporary_command_buffers;
 
                 renderer::device_buffer index_buffer;
-                std::vector<renderer::device_buffer> vertex_buffers;
+                renderer::device_buffer vertex_buffer;
                 std::vector<renderer::device_buffer> uniform_buffers;
 
                 struct {
@@ -311,7 +311,7 @@ namespace arbor {
             std::expected<void, std::string> make_vk_command_pool_and_buffers();
             std::expected<void, std::string> make_sync_objects();
 
-            std::expected<void, std::string> make_vertex_buffers();
+            std::expected<void, std::string> make_vertex_buffer();
             std::expected<void, std::string> make_index_buffer();
             std::expected<void, std::string> make_uniform_buffers();
 

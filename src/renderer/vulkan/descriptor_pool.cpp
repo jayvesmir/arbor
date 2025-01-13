@@ -24,11 +24,14 @@ namespace arbor {
             layout_bindings[1].descriptorCount = 1;
             layout_bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+            // every object has a ubo and image sampler for each frame in flight
+            const auto n_sets = m_parent.vk.sync.frames_in_flight * m_parent.m_parent.current_scene().objects().size();
+
             pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            pool_sizes[0].descriptorCount = m_parent.vk.sync.frames_in_flight;
+            pool_sizes[0].descriptorCount = n_sets;
 
             pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            pool_sizes[1].descriptorCount = m_parent.vk.sync.frames_in_flight;
+            pool_sizes[1].descriptorCount = n_sets;
 
             create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
             create_info.bindingCount = layout_bindings.size();
@@ -44,30 +47,30 @@ namespace arbor {
             pool_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
             pool_create_info.poolSizeCount = pool_sizes.size();
             pool_create_info.pPoolSizes = pool_sizes.data();
-            pool_create_info.maxSets = m_parent.vk.sync.frames_in_flight;
+            pool_create_info.maxSets = n_sets;
 
             m_parent.m_logger->trace("creating a vulkan descriptor pool");
             if (auto res = vkCreateDescriptorPool(m_parent.vk.device, &pool_create_info, nullptr, &m_descriptor_pool);
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to create a descriptor pool: {}", string_VkResult(res)));
 
-            std::vector<VkDescriptorSetLayout> descriptor_set_layouts(m_parent.vk.sync.frames_in_flight, m_descriptor_set_layout);
+            std::vector<VkDescriptorSetLayout> descriptor_set_layouts(n_sets, m_descriptor_set_layout);
 
             VkDescriptorSetAllocateInfo allocation_info{};
 
             allocation_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
             allocation_info.descriptorPool = m_descriptor_pool;
-            allocation_info.descriptorSetCount = m_parent.vk.sync.frames_in_flight;
+            allocation_info.descriptorSetCount = n_sets;
             allocation_info.pSetLayouts = descriptor_set_layouts.data();
 
-            m_descriptor_sets.resize(m_parent.vk.sync.frames_in_flight);
+            m_descriptor_sets.resize(n_sets);
 
-            m_parent.m_logger->trace("allocating vulkan descriptor sets");
+            m_parent.m_logger->trace("allocating {} vulkan descriptor sets", n_sets);
             if (auto res = vkAllocateDescriptorSets(m_parent.vk.device, &allocation_info, m_descriptor_sets.data());
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to allocate descriptor sets: {}", string_VkResult(res)));
 
-            for (auto i = 0ull; i < m_parent.vk.sync.frames_in_flight; i++) {
+            for (auto i = 0ull; i < n_sets; i++) {
                 VkDescriptorBufferInfo buffer_info{};
                 VkDescriptorImageInfo image_info{};
 

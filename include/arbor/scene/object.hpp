@@ -1,5 +1,6 @@
 #pragma once
 #include "arbor/configs.hpp"
+#include "arbor/model.hpp"
 #include "arbor/types.hpp"
 
 namespace arbor {
@@ -7,7 +8,9 @@ namespace arbor {
         class object {
             uint64_t m_id = -1;
 
-            callback_config m_callbacks;
+            engine::object_callback_config m_callbacks;
+
+            glm::mat4 m_transform = {1.0f};
 
           public:
             object(uint64_t id = -1) : m_id(id) {}
@@ -16,6 +19,9 @@ namespace arbor {
 
             constexpr auto& callbacks() { return m_callbacks; }
             constexpr auto& callbacks() const { return m_callbacks; }
+
+            constexpr auto& transform() { return m_transform; }
+            constexpr auto& transform() const { return m_transform; }
         };
     } // namespace engine
 } // namespace arbor

@@ -11,6 +11,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_vulkan.h"
+#include <algorithm>
 
 namespace arbor {
     namespace engine {
@@ -24,7 +25,7 @@ namespace arbor {
                 vkDeviceWaitIdle(vk.device);
 
             vk.index_buffer.free();
-            vk.vertex_buffers.clear();
+            vk.vertex_buffer.free();
             vk.uniform_buffers.clear();
 
             m_pipelines.clear();
@@ -110,7 +111,7 @@ namespace arbor {
             if (auto res = make_vk_device(); !res)
                 return res;
 
-            if (auto res = make_vertex_buffers(); !res)
+            if (auto res = make_vertex_buffer(); !res)
                 return res;
 
             if (auto res = make_index_buffer(); !res)
@@ -160,8 +161,6 @@ namespace arbor {
             if (auto res = record_command_buffer(); !res)
                 return res;
 
-            update_ubos();
-
             if (auto res = submit_and_present_current_command_buffer(); !res)
                 return res;
 
@@ -201,36 +200,28 @@ namespace arbor {
 
             vkCmdBindPipeline(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().pipeline_handle());
 
-            static std::vector<VkBuffer> vertex_buffer_handles;
-            static std::vector<VkDeviceSize> vertex_buffer_offsets;
-            vertex_buffer_handles.resize(vk.vertex_buffers.size());
-            vertex_buffer_offsets.resize(vk.vertex_buffers.size());
-
-            // TODO: only reload this on scene change
-            for (auto i = 0; i < vk.vertex_buffers.size(); i++) {
-                vertex_buffer_handles[i] = *vk.vertex_buffers[i].buffer();
-
-                if (i == 0)
-                    vertex_buffer_offsets[i] = 0;
-                else
-                    vertex_buffer_offsets[i] = vk.vertex_buffers[i - 1].size();
-            }
-
-            vkCmdBindVertexBuffers(current_cmd_buf, 0, vk.vertex_buffers.size(), vertex_buffer_handles.data(),
-                                   vertex_buffer_offsets.data());
+            VkDeviceSize offset = 0;
+            vkCmdBindVertexBuffers(current_cmd_buf, 0, 1, vk.vertex_buffer.buffer(), &offset);
             vkCmdBindIndexBuffer(current_cmd_buf, *vk.index_buffer.buffer(), 0, VK_INDEX_TYPE_UINT32);
 
             vkCmdSetViewport(current_cmd_buf, 0, 1, m_pipelines.back().viewports());
             vkCmdSetScissor(current_cmd_buf, 0, 1, m_pipelines.back().scissors());
 
-            vkCmdBindDescriptorSets(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().m_pipeline_layout, 0, 1,
-                                    &m_pipelines.back().m_descriptor_sets[vk.sync.current_frame], 0, nullptr);
+            update_ubos();
 
             uint32_t index_offset = 0;
+            uint32_t vertex_offset = 0;
+            uint32_t ubo_offset = 0;
             for (auto& [id, object] : m_parent.current_scene().objects()) {
+
+                vkCmdBindDescriptorSets(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().m_pipeline_layout, 0,
+                                        1, &m_pipelines.back().m_descriptor_sets[vk.sync.current_frame + ubo_offset], 0, nullptr);
                 vkCmdDrawIndexed(current_cmd_buf, m_parent.current_scene().asset_library()[id].model.indices.size(), 1,
-                                 index_offset, 0, 0);
+                                 index_offset, vertex_offset, 0);
+
                 index_offset += m_parent.current_scene().asset_library()[id].model.indices.size();
+                vertex_offset += m_parent.current_scene().asset_library()[id].model.vertices.size();
+                ubo_offset += vk.sync.frames_in_flight;
             }
 
             draw_gui();
@@ -289,24 +280,18 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::update_ubos() {
-            static float rotation = 0.0f;
-            static float position = 0.0f;
-
-            rotation += m_parent.frame_time_ms() * (glm::radians(0.25f) / 2.0f);
-            position += m_parent.frame_time_ms() * (0.005f / 2.0f);
-
-            engine::detail::mvp mvp;
-
-            mvp.model = glm::mat4(1.0f);
-            mvp.model = glm::translate(mvp.model, glm::vec3(glm::sin(position), glm::cos(position), 0.0f));
-            mvp.model = glm::rotate(mvp.model, rotation, glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(0.0f, 1.0f, 1.0f);
+            static engine::detail::mvp mvp;
             mvp.view = glm::lookAt(glm::vec3(3.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             mvp.projection = glm::perspective(
                 glm::radians(70.0f), static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
-
             mvp.projection[1][1] *= -1.0;
 
-            vk.uniform_buffers[vk.sync.current_frame].write_data(&mvp, sizeof(mvp));
+            uint32_t ubo_offset = 0;
+            for (auto& [id, object] : m_parent.current_scene().objects()) {
+                mvp.model = object.transform();
+                vk.uniform_buffers[vk.sync.current_frame + ubo_offset].write_data(&mvp, sizeof(mvp));
+                ubo_offset += vk.sync.frames_in_flight;
+            }
 
             return {};
         }

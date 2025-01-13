@@ -13,6 +13,11 @@ namespace arbor {
             std::optional<std::function<void(engine::instance&)>> on_update;
         };
 
+        struct object_callback_config {
+            std::optional<std::function<void(engine::instance&, uint64_t id)>> on_init;
+            std::optional<std::function<void(engine::instance&, uint64_t id)>> on_update;
+        };
+
         struct application_config {
             struct {
                 std::string title;

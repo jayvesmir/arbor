@@ -149,30 +149,27 @@ namespace arbor {
             free();
         }
 
-        std::expected<void, std::string> renderer::make_vertex_buffers() {
-            const auto& scene = m_parent.current_scene();
-            const auto& asset_libary = scene.asset_library();
+        std::expected<void, std::string> renderer::make_vertex_buffer() {
+            uint64_t size = 0;
+            std::vector<engine::vertex_3d> vertices;
+            for (auto [id, object] : m_parent.current_scene().objects()) {
+                size += m_parent.current_scene().asset_library()[id].model.vertices.size() *
+                        sizeof(*m_parent.current_scene().asset_library()[id].model.vertices.begin());
 
-            for (auto& [id, object] : scene.objects()) {
-                auto size = asset_libary.at(id).model.vertices.size() * sizeof(*asset_libary.at(id).model.vertices.begin());
-
-                m_logger->trace("allocating a vertex buffer of {} vertices ({} bytes)", asset_libary.at(id).model.vertices.size(),
-                                size);
-
-                vk.vertex_buffers.emplace_back();
-                if (auto res =
-                        vk.vertex_buffers.back().make(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                                      vk.device, vk.physical_device.handle);
-                    !res) {
-                    return res;
-                }
-
-                if (auto res = vk.vertex_buffers.back().write_data(asset_libary.at(id).model.vertices.data(), size,
-                                                                   vk.graphics_queue, vk.command_pool);
-                    !res)
-                    return res;
+                vertices.append_range(m_parent.current_scene().asset_library()[id].model.vertices);
             }
+
+            m_logger->trace("allocating a vertex buffer of {} vertices ({} bytes)", vertices.size(), size);
+
+            if (auto res = vk.vertex_buffer.make(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                                 vk.device, vk.physical_device.handle);
+                !res) {
+                return res;
+            }
+
+            if (auto res = vk.vertex_buffer.write_data(vertices.data(), size, vk.graphics_queue, vk.command_pool); !res)
+                return res;
 
             return {};
         }
@@ -204,7 +201,7 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_uniform_buffers() {
             auto size = sizeof(engine::detail::mvp);
 
-            vk.uniform_buffers.resize(vk.sync.frames_in_flight);
+            vk.uniform_buffers.resize(vk.sync.frames_in_flight * m_parent.current_scene().objects().size());
 
             for (auto& buffer : vk.uniform_buffers) {
                 if (auto res = buffer.make(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
