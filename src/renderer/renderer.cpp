@@ -281,7 +281,7 @@ namespace arbor {
 
         std::expected<void, std::string> renderer::update_ubos() {
             static engine::detail::mvp mvp;
-            mvp.view = glm::lookAt(glm::vec3(3.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            mvp.view = glm::lookAt(glm::vec3(2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
             mvp.projection = glm::perspective(
                 glm::radians(70.0f), static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
             mvp.projection[1][1] *= -1.0;

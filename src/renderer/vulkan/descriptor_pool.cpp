@@ -70,6 +70,8 @@ namespace arbor {
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to allocate descriptor sets: {}", string_VkResult(res)));
 
+            auto object_it = m_parent.m_parent.current_scene().objects().begin();
+
             for (auto i = 0ull; i < n_sets; i++) {
                 VkDescriptorBufferInfo buffer_info{};
                 VkDescriptorImageInfo image_info{};
@@ -82,10 +84,12 @@ namespace arbor {
 
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-                // TODO: actually handle properly
-                const auto texture_id = m_parent.m_textures.begin()->first;
-                image_info.imageView = m_parent.m_textures.at(texture_id).at(engine::texture::albedo).image_view();
-                image_info.sampler = m_parent.m_textures.at(texture_id).at(engine::texture::albedo).sampler();
+                if (!m_parent.m_textures.contains(object_it->first))
+                    return std::unexpected(fmt::format("object {} is missing a texture", object_it->first));
+
+                auto& albedo = m_parent.m_textures[object_it->first][engine::texture::albedo];
+                image_info.imageView = albedo.image_view();
+                image_info.sampler = albedo.sampler();
 
                 writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 writes[0].dstSet = m_descriptor_sets[i];
@@ -104,6 +108,9 @@ namespace arbor {
                 writes[1].pImageInfo = &image_info;
 
                 vkUpdateDescriptorSets(m_parent.vk.device, writes.size(), writes.data(), 0, nullptr);
+
+                if ((i + 1) % m_parent.vk.sync.frames_in_flight == 0)
+                    object_it++;
             }
 
             return {};
