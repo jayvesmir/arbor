@@ -4,6 +4,8 @@
 
 #include "SDL3/SDL_events.h"
 #include "arbor/components/renderer.hpp"
+#include "arbor/scene/camera.hpp"
+#include "glm/fwd.hpp"
 #include "imgui_impl_sdl3.h"
 
 namespace arbor {

@@ -1,5 +1,6 @@
 #pragma once
 #include "arbor/scene/asset_library.hpp"
+#include "arbor/scene/camera.hpp"
 #include "arbor/scene/object.hpp"
 
 #include <filesystem>
@@ -18,6 +19,7 @@ namespace arbor {
             std::filesystem::path m_vertex_shader;
             std::filesystem::path m_fragment_shader;
 
+            engine::camera m_camera;
             engine::asset_library m_asset_library;
             std::unordered_map<uint64_t, engine::object> m_objects;
 
@@ -36,6 +38,8 @@ namespace arbor {
             constexpr auto& fragment_shader() const { return m_fragment_shader; }
 
             constexpr auto& name() const { return m_name; }
+            constexpr auto& camera() { return m_camera; }
+            constexpr auto& camera() const { return m_camera; }
             constexpr auto& objects() { return m_objects; }
             constexpr auto& objects() const { return m_objects; }
             constexpr auto& asset_library() { return m_asset_library; }
