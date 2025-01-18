@@ -91,7 +91,7 @@ namespace arbor {
                 auto position = m_parent.current_scene().camera().position();
 
                 ImGui::Text("camera position [XYZ]: (%.03f, %.03f, %.03f)", position.x, position.y, position.z);
-                ImGui::Text("camera rotation [XY]: (%.03f°, %.03f°, %.03f°)", rotation.x, rotation.y, rotation.z);
+                ImGui::Text("camera rotation [XYZ]: (%.03f°, %.03f°, %.03f°)", rotation.x, rotation.y, rotation.z);
 
                 ImGui::Separator();
 
