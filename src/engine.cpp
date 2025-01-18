@@ -1,11 +1,10 @@
 #include "arbor/engine.hpp"
-#include <algorithm>
 #include <chrono>
 
-#include "SDL3/SDL_events.h"
 #include "arbor/components/renderer.hpp"
 #include "arbor/scene/camera.hpp"
-#include "glm/fwd.hpp"
+
+#include "glm/trigonometric.hpp"
 #include "imgui_impl_sdl3.h"
 
 namespace arbor {
@@ -96,6 +95,45 @@ namespace arbor {
                             return res;
                         }
                     }
+
+                    if (m_input_manager.key_down(SDL_SCANCODE_SPACE)) {
+                        m_camera_ownership = true;
+                    } else {
+                        m_camera_ownership = false;
+                    }
+
+                    if (m_camera_ownership) {
+                        auto camera_speed = 0.01f;
+                        auto camera_sensitivity = 0.025f;
+
+                        glm::vec3 translation = {0.0f, 0.0f, 0.0f};
+
+                        if (m_input_manager.key_down(SDL_SCANCODE_LSHIFT))
+                            camera_speed *= 4;
+
+                        if (m_input_manager.key_down(SDL_SCANCODE_W))
+                            translation += glm::vec3(0.0f, 0.0f, -camera_speed);
+
+                        if (m_input_manager.key_down(SDL_SCANCODE_A))
+                            translation += glm::vec3(camera_speed, 0.0f, 0.0f);
+
+                        if (m_input_manager.key_down(SDL_SCANCODE_S))
+                            translation += glm::vec3(0.0f, 0.0f, camera_speed);
+
+                        if (m_input_manager.key_down(SDL_SCANCODE_D))
+                            translation += glm::vec3(-camera_speed, 0.0f, 0.0f);
+
+                        if (m_input_manager.key_down(SDL_SCANCODE_E))
+                            translation += glm::vec3(0.0f, -camera_speed, 0.0f);
+
+                        if (m_input_manager.key_down(SDL_SCANCODE_Q))
+                            translation += glm::vec3(0.0f, camera_speed, 0.0f);
+
+                        current_scene().camera().translate(translation);
+                        current_scene().camera().rotate(glm::vec3(-camera_sensitivity * m_input_manager.mouse_delta().x,
+                                                                  camera_sensitivity * m_input_manager.mouse_delta().y, 0.0f) *
+                                                        static_cast<float>(frame_time_ms()));
+                    }
                 }
 
                 m_frame_count++;
@@ -133,6 +171,8 @@ namespace arbor {
                 auto renderer = dynamic_cast<engine::renderer*>(m_components.at(component::etype::renderer).get());
                 renderer->resize_viewport();
             }
+
+            m_input_manager.update_from_event(event);
 
             return {};
         }

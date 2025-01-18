@@ -9,12 +9,8 @@ void init(arbor::engine::instance& engine) {
     scene.vertex_shader("example/shaders/basic.vert");
     scene.fragment_shader("example/shaders/basic.frag");
 
-    auto camera_start_pos = glm::mat4(1.0f);
-
-    camera_start_pos = glm::translate(camera_start_pos, glm::vec3(0.0f, 3.0f, 1.0f));
-    camera_start_pos = glm::rotate(camera_start_pos, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-
-    scene.camera().transform() = camera_start_pos;
+    scene.camera().translate(glm::vec3(0.0f, 3.0f, 1.0f));
+    scene.camera().rotate(glm::vec3(0.0f, -90.0f, 0.0f));
 
     {
         //                                   blah blah blah

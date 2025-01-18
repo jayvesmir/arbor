@@ -11,6 +11,7 @@
 
 #include "arbor/components/components.hpp"
 #include "arbor/configs.hpp"
+#include "arbor/input_manager.hpp"
 #include "arbor/logger_utils.hpp"
 #include "arbor/scene/scene.hpp"
 #include "arbor/types.hpp"
@@ -26,6 +27,7 @@ namespace arbor {
             std::shared_ptr<spdlog::logger> m_logger;
 
             engine::window m_window;
+            engine::input_manager m_input_manager;
             std::unordered_map<engine::component::etype, std::unique_ptr<engine::component>> m_components;
 
             std::atomic<bool> m_running;
@@ -34,6 +36,7 @@ namespace arbor {
 
             uint64_t m_frame_count = 0;
             double m_frame_time_ns = 0;
+            bool m_camera_ownership = false;
 
           public:
             instance();
@@ -51,8 +54,11 @@ namespace arbor {
 
             constexpr auto& scenes() { return m_scenes; }
             constexpr auto& scenes() const { return m_scenes; }
-            auto& current_scene() { return m_current_scene.value()->second; }
-            auto& current_scene() const { return m_current_scene.value()->second; }
+            constexpr auto& input_manager() const { return m_input_manager; }
+            constexpr auto& current_scene() { return m_current_scene.value()->second; }
+            constexpr auto& current_scene() const { return m_current_scene.value()->second; }
+
+            constexpr auto owns_camera() const { return m_camera_ownership; }
 
           protected:
             constexpr auto& window() { return m_window; }
