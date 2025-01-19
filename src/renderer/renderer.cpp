@@ -15,7 +15,7 @@
 
 namespace arbor {
     namespace engine {
-        renderer::renderer(engine::instance& parent) : m_parent(parent) {
+        renderer::renderer(engine::instance& parent) : m_engine(parent) {
             m_identifier = "renderer";
             m_type = etype::renderer;
         }
@@ -99,8 +99,8 @@ namespace arbor {
 
         std::expected<void, std::string> renderer::init() {
             initialize_component_logger();
-            m_logger->trace("parent: {}", fmt::ptr(&m_parent));
-            m_logger->trace("parent window: {}", fmt::ptr(&m_parent.window()));
+            m_logger->trace("parent: {}", fmt::ptr(&m_engine));
+            m_logger->trace("parent window: {}", fmt::ptr(&m_engine.window()));
 
             if (auto res = make_vk_instance(); !res)
                 return res;
@@ -212,15 +212,15 @@ namespace arbor {
             uint32_t index_offset = 0;
             uint32_t vertex_offset = 0;
             uint32_t ubo_offset = 0;
-            for (auto& [id, object] : m_parent.current_scene().objects()) {
+            for (auto& [id, object] : m_engine.current_scene().objects()) {
 
                 vkCmdBindDescriptorSets(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().m_pipeline_layout, 0,
                                         1, &m_pipelines.back().m_descriptor_sets[vk.sync.current_frame + ubo_offset], 0, nullptr);
-                vkCmdDrawIndexed(current_cmd_buf, m_parent.current_scene().asset_library()[id].model.indices.size(), 1,
+                vkCmdDrawIndexed(current_cmd_buf, m_engine.current_scene().asset_library()[id].model.indices.size(), 1,
                                  index_offset, vertex_offset, 0);
 
-                index_offset += m_parent.current_scene().asset_library()[id].model.indices.size();
-                vertex_offset += m_parent.current_scene().asset_library()[id].model.vertices.size();
+                index_offset += m_engine.current_scene().asset_library()[id].model.indices.size();
+                vertex_offset += m_engine.current_scene().asset_library()[id].model.vertices.size();
                 ubo_offset += vk.sync.frames_in_flight;
             }
 
@@ -269,11 +269,11 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::resize_viewport() {
-            auto old_width = m_parent.window().width();
-            auto old_height = m_parent.window().height();
-            m_parent.window().update_dimensions();
+            auto old_width = m_engine.window().width();
+            auto old_height = m_engine.window().height();
+            m_engine.window().update_dimensions();
 
-            if (old_width == m_parent.window().width() && old_height == m_parent.window().height())
+            if (old_width == m_engine.window().width() && old_height == m_engine.window().height())
                 return {};
 
             return reload_swapchain();
@@ -281,14 +281,14 @@ namespace arbor {
 
         std::expected<void, std::string> renderer::update_ubos() {
             static engine::detail::mvp mvp;
-            mvp.view = m_parent.current_scene().camera().view_matrix();
+            mvp.view = m_engine.current_scene().camera().view_matrix();
 
             mvp.projection = glm::perspective(
-                glm::radians(75.0f), static_cast<float>(m_parent.window().width()) / m_parent.window().height(), 1e-6f, 1e+6f);
+                glm::radians(75.0f), static_cast<float>(m_engine.window().width()) / m_engine.window().height(), 1e-6f, 1e+6f);
             mvp.projection[1][1] *= -1.0;
 
             uint32_t ubo_offset = 0;
-            for (auto& [id, object] : m_parent.current_scene().objects()) {
+            for (auto& [id, object] : m_engine.current_scene().objects()) {
                 mvp.model = object.transform();
                 vk.uniform_buffers[vk.sync.current_frame + ubo_offset].write_data(&mvp, sizeof(mvp));
                 ubo_offset += vk.sync.frames_in_flight;

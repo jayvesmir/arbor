@@ -152,11 +152,11 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_vertex_buffer() {
             uint64_t size = 0;
             std::vector<engine::vertex_3d> vertices;
-            for (auto [id, object] : m_parent.current_scene().objects()) {
-                size += m_parent.current_scene().asset_library()[id].model.vertices.size() *
-                        sizeof(*m_parent.current_scene().asset_library()[id].model.vertices.begin());
+            for (auto [id, object] : m_engine.current_scene().objects()) {
+                size += m_engine.current_scene().asset_library()[id].model.vertices.size() *
+                        sizeof(*m_engine.current_scene().asset_library()[id].model.vertices.begin());
 
-                vertices.append_range(m_parent.current_scene().asset_library()[id].model.vertices);
+                vertices.append_range(m_engine.current_scene().asset_library()[id].model.vertices);
             }
 
             m_logger->trace("allocating a vertex buffer of {} vertices ({} bytes)", vertices.size(), size);
@@ -177,11 +177,11 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_index_buffer() {
             uint64_t size = 0;
             std::vector<uint32_t> indices;
-            for (auto [id, object] : m_parent.current_scene().objects()) {
-                size += m_parent.current_scene().asset_library()[id].model.indices.size() *
-                        sizeof(*m_parent.current_scene().asset_library()[id].model.indices.begin());
+            for (auto [id, object] : m_engine.current_scene().objects()) {
+                size += m_engine.current_scene().asset_library()[id].model.indices.size() *
+                        sizeof(*m_engine.current_scene().asset_library()[id].model.indices.begin());
 
-                indices.append_range(m_parent.current_scene().asset_library()[id].model.indices);
+                indices.append_range(m_engine.current_scene().asset_library()[id].model.indices);
             }
 
             m_logger->trace("allocating an index buffer of {} vertices ({} bytes)", indices.size(), size);
@@ -201,7 +201,7 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_uniform_buffers() {
             auto size = sizeof(engine::detail::mvp);
 
-            vk.uniform_buffers.resize(vk.sync.frames_in_flight * m_parent.current_scene().objects().size());
+            vk.uniform_buffers.resize(vk.sync.frames_in_flight * m_engine.current_scene().objects().size());
 
             for (auto& buffer : vk.uniform_buffers) {
                 if (auto res = buffer.make(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,

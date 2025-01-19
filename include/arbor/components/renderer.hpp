@@ -96,7 +96,7 @@ namespace arbor {
 
             class pipeline {
                 friend class renderer;
-                engine::renderer& m_parent;
+                engine::renderer& m_renderer;
 
                 VkPipelineLayoutCreateInfo m_pipeline_layout_create_info{};
                 VkPipelineColorBlendAttachmentState m_color_blend_attachment{};
@@ -126,8 +126,8 @@ namespace arbor {
 
               public:
                 ~pipeline();
-                pipeline(engine::renderer& parent) : m_parent(parent) {}
-                pipeline(pipeline&& other) : m_parent(other.m_parent), m_shaders(std::move(other.m_shaders)) {}
+                pipeline(engine::renderer& parent) : m_renderer(parent) {}
+                pipeline(pipeline&& other) : m_renderer(other.m_renderer), m_shaders(std::move(other.m_shaders)) {}
 
                 pipeline(const pipeline&) = delete;
 
@@ -206,7 +206,7 @@ namespace arbor {
             };
 
           private:
-            engine::instance& m_parent;
+            engine::instance& m_engine;
 
             struct {
                 VkInstance instance = VK_NULL_HANDLE;

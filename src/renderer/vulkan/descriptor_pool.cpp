@@ -25,7 +25,7 @@ namespace arbor {
             layout_bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
             // every object has a ubo and image sampler for each frame in flight
-            const auto n_sets = m_parent.vk.sync.frames_in_flight * m_parent.m_parent.current_scene().objects().size();
+            const auto n_sets = m_renderer.vk.sync.frames_in_flight * m_renderer.m_engine.current_scene().objects().size();
 
             pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             pool_sizes[0].descriptorCount = n_sets;
@@ -37,8 +37,8 @@ namespace arbor {
             create_info.bindingCount = layout_bindings.size();
             create_info.pBindings = layout_bindings.data();
 
-            m_parent.m_logger->trace("creating a vulkan descriptor set layout");
-            if (auto res = vkCreateDescriptorSetLayout(m_parent.vk.device, &create_info, nullptr, &m_descriptor_set_layout);
+            m_renderer.m_logger->trace("creating a vulkan descriptor set layout");
+            if (auto res = vkCreateDescriptorSetLayout(m_renderer.vk.device, &create_info, nullptr, &m_descriptor_set_layout);
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to create a descriptor set layout: {}", string_VkResult(res)));
 
@@ -49,8 +49,8 @@ namespace arbor {
             pool_create_info.pPoolSizes = pool_sizes.data();
             pool_create_info.maxSets = n_sets;
 
-            m_parent.m_logger->trace("creating a vulkan descriptor pool");
-            if (auto res = vkCreateDescriptorPool(m_parent.vk.device, &pool_create_info, nullptr, &m_descriptor_pool);
+            m_renderer.m_logger->trace("creating a vulkan descriptor pool");
+            if (auto res = vkCreateDescriptorPool(m_renderer.vk.device, &pool_create_info, nullptr, &m_descriptor_pool);
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to create a descriptor pool: {}", string_VkResult(res)));
 
@@ -65,12 +65,12 @@ namespace arbor {
 
             m_descriptor_sets.resize(n_sets);
 
-            m_parent.m_logger->trace("allocating {} vulkan descriptor sets", n_sets);
-            if (auto res = vkAllocateDescriptorSets(m_parent.vk.device, &allocation_info, m_descriptor_sets.data());
+            m_renderer.m_logger->trace("allocating {} vulkan descriptor sets", n_sets);
+            if (auto res = vkAllocateDescriptorSets(m_renderer.vk.device, &allocation_info, m_descriptor_sets.data());
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to allocate descriptor sets: {}", string_VkResult(res)));
 
-            auto object_it = m_parent.m_parent.current_scene().objects().begin();
+            auto object_it = m_renderer.m_engine.current_scene().objects().begin();
 
             for (auto i = 0ull; i < n_sets; i++) {
                 VkDescriptorBufferInfo buffer_info{};
@@ -78,16 +78,16 @@ namespace arbor {
 
                 std::vector<VkWriteDescriptorSet> writes(2);
 
-                buffer_info.buffer = *m_parent.vk.uniform_buffers[i].buffer();
+                buffer_info.buffer = *m_renderer.vk.uniform_buffers[i].buffer();
                 buffer_info.offset = 0;
                 buffer_info.range = sizeof(engine::detail::mvp);
 
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-                if (!m_parent.m_textures.contains(object_it->first))
+                if (!m_renderer.m_textures.contains(object_it->first))
                     return std::unexpected(fmt::format("object {} is missing a texture", object_it->first));
 
-                auto& albedo = m_parent.m_textures[object_it->first][engine::texture::albedo];
+                auto& albedo = m_renderer.m_textures[object_it->first][engine::texture::albedo];
                 image_info.imageView = albedo.image_view();
                 image_info.sampler = albedo.sampler();
 
@@ -107,9 +107,9 @@ namespace arbor {
                 writes[1].descriptorCount = 1;
                 writes[1].pImageInfo = &image_info;
 
-                vkUpdateDescriptorSets(m_parent.vk.device, writes.size(), writes.data(), 0, nullptr);
+                vkUpdateDescriptorSets(m_renderer.vk.device, writes.size(), writes.data(), 0, nullptr);
 
-                if ((i + 1) % m_parent.vk.sync.frames_in_flight == 0)
+                if ((i + 1) % m_renderer.vk.sync.frames_in_flight == 0)
                     object_it++;
             }
 

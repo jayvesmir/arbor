@@ -20,7 +20,7 @@ namespace arbor {
             m_gui.imgui_ctx = ImGui::CreateContext();
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
 
-            if (!ImGui_ImplSDL3_InitForVulkan(m_parent.window().sdl_handle()))
+            if (!ImGui_ImplSDL3_InitForVulkan(m_engine.window().sdl_handle()))
                 return std::unexpected(fmt::format("failed to initialize ImGui"));
 
             ImGui_ImplVulkan_InitInfo init_info{};
@@ -79,26 +79,27 @@ namespace arbor {
 
             ImGui::SeparatorText("statistics");
 
-            ImGui::Text("scene: %s", m_parent.current_scene().name().c_str());
-            ImGui::Text("frametime: %.03f ms (%.03f ms avg.)", m_parent.frame_time_ms(), 1000.f / io.Framerate);
-            ImGui::Text("framerate: %.03f (%.03f avg.)", 1000.0f / m_parent.frame_time_ms(), io.Framerate);
-            ImGui::Text("frames drawn: %llu", m_parent.frame_count());
+            ImGui::Text("scene: %s", m_engine.current_scene().name().c_str());
+            ImGui::Text("frametime: %.03f ms (%.03f ms avg.)", m_engine.frame_time_ms(), 1000.f / io.Framerate);
+            ImGui::Text("framerate: %.03f (%.03f avg.)", 1000.0f / m_engine.frame_time_ms(), io.Framerate);
+            ImGui::Text("frames drawn: %llu", m_engine.frame_count());
+            ImGui::Text("objects: %zu", m_engine.current_scene().objects().size());
 
             ImGui::SeparatorText("info");
 
             {
-                auto rotation = glm::degrees(m_parent.current_scene().camera().rotation());
-                auto position = m_parent.current_scene().camera().position();
+                auto rotation = glm::degrees(m_engine.current_scene().camera().rotation());
+                auto position = m_engine.current_scene().camera().position();
 
                 ImGui::Text("camera position [XYZ]: (%.03f, %.03f, %.03f)", position.x, position.y, position.z);
                 ImGui::Text("camera rotation [XYZ]: (%.03f°, %.03f°, %.03f°)", rotation.x, rotation.y, rotation.z);
 
                 ImGui::Separator();
 
-                ImGui::Text("mouse position: [XY]: (%.00f, %.00f)", m_parent.input_manager().mouse_position().x,
-                            m_parent.input_manager().mouse_position().y);
-                ImGui::Text("mouse delta: [XY]: (%.00f, %.00f)", m_parent.input_manager().mouse_delta().x,
-                            m_parent.input_manager().mouse_delta().y);
+                ImGui::Text("mouse position: [XY]: (%.00f, %.00f)", m_engine.input_manager().mouse_position().x,
+                            m_engine.input_manager().mouse_position().y);
+                ImGui::Text("mouse delta: [XY]: (%.00f, %.00f)", m_engine.input_manager().mouse_delta().x,
+                            m_engine.input_manager().mouse_delta().y);
             }
 
             ImGui::SeparatorText("config");

@@ -9,7 +9,7 @@ namespace arbor {
     namespace engine {
         std::expected<void, std::string> renderer::make_vk_surface() {
             m_logger->trace("creating a window surface");
-            if (!SDL_Vulkan_CreateSurface(m_parent.window().sdl_handle(), vk.instance, nullptr, &vk.swapchain.surface))
+            if (!SDL_Vulkan_CreateSurface(m_engine.window().sdl_handle(), vk.instance, nullptr, &vk.swapchain.surface))
                 return std::unexpected(fmt::format("failed to create window surface: {}", SDL_GetError()));
 
             return {};
@@ -151,7 +151,7 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::reload_swapchain() {
-            m_logger->trace("rebuilding swapchain ({}x{})", m_parent.window().width(), m_parent.window().height());
+            m_logger->trace("rebuilding swapchain ({}x{})", m_engine.window().width(), m_engine.window().height());
 
             vkDeviceWaitIdle(vk.device);
 
