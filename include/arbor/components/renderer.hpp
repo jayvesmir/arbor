@@ -187,9 +187,6 @@ namespace arbor {
                 VkDeviceMemory m_image_memory = VK_NULL_HANDLE;
                 VkSampler m_sampler = VK_NULL_HANDLE;
 
-                std::expected<void, std::string> transition_layout(engine::renderer& renderer, VkImageLayout old_layout,
-                                                                   VkImageLayout new_layout);
-
               public:
                 ~texture();
                 texture() = default;
@@ -231,6 +228,11 @@ namespace arbor {
                     std::vector<VkImage> images;
                     std::vector<VkImageView> image_views;
                     std::vector<VkFramebuffer> framebuffers;
+
+                    VkImage depth_image;
+                    VkFormat depth_format;
+                    VkDeviceMemory depth_buffer;
+                    VkImageView depth_image_view;
 
                     VkExtent2D extent;
                     VkSurfaceFormatKHR format;
@@ -314,6 +316,13 @@ namespace arbor {
             std::expected<void, std::string> make_vertex_buffer();
             std::expected<void, std::string> make_index_buffer();
             std::expected<void, std::string> make_uniform_buffers();
+
+            std::expected<std::tuple<VkImage, VkImageView, VkDeviceMemory>, std::string>
+            make_image(uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage, VkImageAspectFlags aspect_mask,
+                       VkMemoryPropertyFlags memory_props);
+
+            std::expected<void, std::string> transition_image_layout(VkImage image, VkImageAspectFlags aspect_mask,
+                                                                     VkImageLayout old_layout, VkImageLayout new_layout);
 
             std::expected<VkCommandBuffer, std::string> begin_temporary_command_buffer();
             std::expected<void, std::string> submit_command_buffer(VkCommandBuffer command_buffer, VkQueue queue);

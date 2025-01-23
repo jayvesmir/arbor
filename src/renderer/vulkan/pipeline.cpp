@@ -99,14 +99,19 @@ namespace arbor {
             VkSubpassDescription subpass_description{};
             VkRenderPassCreateInfo render_pass_create_info{};
             VkAttachmentReference color_attachment_reference{};
+            VkAttachmentReference depth_attachment_reference{};
             VkAttachmentDescription color_attachment_description{};
+            VkAttachmentDescription depth_attachment_description{};
 
             subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
             subpass_dependency.dstSubpass = 0;
-            subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            subpass_dependency.srcStageMask =
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
             subpass_dependency.srcAccessMask = 0;
-            subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            subpass_dependency.dstStageMask =
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            subpass_dependency.dstAccessMask =
+                VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
             color_attachment_description.format = m_renderer.vk.swapchain.format.format;
             color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -120,13 +125,28 @@ namespace arbor {
             color_attachment_reference.attachment = 0;
             color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+            depth_attachment_description.format = m_renderer.vk.swapchain.depth_format;
+            depth_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+            depth_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            depth_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depth_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depth_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depth_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            depth_attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            depth_attachment_reference.attachment = 1;
+            depth_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
             subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
             subpass_description.colorAttachmentCount = 1;
             subpass_description.pColorAttachments = &color_attachment_reference;
+            subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
+
+            std::array<VkAttachmentDescription, 2> attachments = {color_attachment_description, depth_attachment_description};
 
             render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-            render_pass_create_info.attachmentCount = 1;
-            render_pass_create_info.pAttachments = &color_attachment_description;
+            render_pass_create_info.attachmentCount = attachments.size();
+            render_pass_create_info.pAttachments = attachments.data();
             render_pass_create_info.subpassCount = 1;
             render_pass_create_info.pSubpasses = &subpass_description;
             render_pass_create_info.dependencyCount = 1;
@@ -137,6 +157,7 @@ namespace arbor {
                 return std::unexpected(fmt::format("failed to create a vulkan render pass: {}", string_VkResult(res)));
 
             VkGraphicsPipelineCreateInfo pipeline_create_info{};
+            VkPipelineDepthStencilStateCreateInfo stencil_state_create_info{};
 
             m_renderer.m_logger->trace("creating a vulkan pipeline with {} stages", m_pipeline_stages.size());
 
@@ -152,6 +173,11 @@ namespace arbor {
             m_viewport_state.scissorCount = 1;
             m_viewport_state.pScissors = &m_scissor;
 
+            stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+            stencil_state_create_info.depthTestEnable = VK_TRUE;
+            stencil_state_create_info.depthWriteEnable = VK_TRUE;
+            stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_LESS;
+
             pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
             pipeline_create_info.stageCount = m_pipeline_stages.size();
             pipeline_create_info.pStages = m_pipeline_stages.data();
@@ -162,6 +188,7 @@ namespace arbor {
             pipeline_create_info.pMultisampleState = &m_multisampler_state;
             pipeline_create_info.pColorBlendState = &m_color_blend_state;
             pipeline_create_info.pDynamicState = &m_dynamic_state;
+            pipeline_create_info.pDepthStencilState = &stencil_state_create_info;
 
             pipeline_create_info.subpass = 0;
             pipeline_create_info.renderPass = m_render_pass;

@@ -65,6 +65,21 @@ namespace arbor {
                 image_view = VK_NULL_HANDLE;
             }
 
+            if (vk.swapchain.depth_image_view && vk.device) {
+                vkDestroyImageView(vk.device, vk.swapchain.depth_image_view, nullptr);
+                vk.swapchain.depth_image_view = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.depth_image && vk.device) {
+                vkDestroyImage(vk.device, vk.swapchain.depth_image, nullptr);
+                vk.swapchain.depth_image = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.depth_buffer && vk.device) {
+                vkFreeMemory(vk.device, vk.swapchain.depth_buffer, nullptr);
+                vk.swapchain.depth_buffer = VK_NULL_HANDLE;
+            }
+
             if (vk.swapchain.handle && vk.device) {
                 vkDestroySwapchainKHR(vk.device, vk.swapchain.handle, nullptr);
                 vk.swapchain.handle = VK_NULL_HANDLE;
@@ -101,6 +116,8 @@ namespace arbor {
             initialize_component_logger();
             m_logger->trace("parent: {}", fmt::ptr(&m_engine));
             m_logger->trace("parent window: {}", fmt::ptr(&m_engine.window()));
+
+            vk.swapchain.depth_format = VK_FORMAT_D24_UNORM_S8_UINT;
 
             if (auto res = make_vk_instance(); !res)
                 return res;
@@ -171,11 +188,20 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::record_command_buffer() {
-            static VkClearValue background{
-                .color =
-                    {
-                        .float32 = {0.0f, 0.0f, 0.0f, 1.0f},
-                    },
+            static std::array<VkClearValue, 2> clear_values = {
+                VkClearValue{
+                    .color =
+                        {
+                            .float32 = {0.0f, 0.0f, 0.0f, 1.0f},
+                        },
+                },
+                VkClearValue{
+                    .depthStencil =
+                        {
+                            .depth = 1.0f,
+                            .stencil = 0,
+                        },
+                },
             };
 
             static VkCommandBufferBeginInfo cmd_buffer_begin_info{
@@ -193,8 +219,8 @@ namespace arbor {
             render_pass_begin_info.renderPass = m_pipelines.back().render_pass();
             render_pass_begin_info.framebuffer = vk.swapchain.framebuffers[vk.swapchain.current_image];
             render_pass_begin_info.renderArea.extent = vk.swapchain.extent;
-            render_pass_begin_info.clearValueCount = 1;
-            render_pass_begin_info.pClearValues = &background;
+            render_pass_begin_info.clearValueCount = clear_values.size();
+            render_pass_begin_info.pClearValues = clear_values.data();
 
             vkCmdBeginRenderPass(current_cmd_buf, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 

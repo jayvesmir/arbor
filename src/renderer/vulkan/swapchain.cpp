@@ -98,6 +98,21 @@ namespace arbor {
             vk.swapchain.framebuffers.resize(vk_n);
             vkGetSwapchainImagesKHR(vk.device, vk.swapchain.handle, &vk_n, vk.swapchain.images.data());
 
+            if (auto res = make_image(vk.swapchain.extent.width, vk.swapchain.extent.height, vk.swapchain.depth_format,
+                                      VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT,
+                                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+                !res) {
+                return std::unexpected(res.error());
+            } else {
+                auto& [image, view, memory] = *res;
+                vk.swapchain.depth_image = image;
+                vk.swapchain.depth_image_view = view;
+                vk.swapchain.depth_buffer = memory;
+            }
+
+            transition_image_layout(vk.swapchain.depth_image, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+                                    VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
             m_pipelines.back().reload();
 
             m_logger->trace("created a vulkan swapchain with {} images", vk.swapchain.images.size());
@@ -119,10 +134,12 @@ namespace arbor {
                     res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create swapchain image view {}: {}", i, string_VkResult(res)));
 
+                std::array<VkImageView, 2> attachments = {vk.swapchain.image_views[i], vk.swapchain.depth_image_view};
+
                 framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
                 framebuffer_create_info.renderPass = m_pipelines.back().render_pass();
-                framebuffer_create_info.attachmentCount = 1;
-                framebuffer_create_info.pAttachments = &vk.swapchain.image_views[i];
+                framebuffer_create_info.attachmentCount = attachments.size();
+                framebuffer_create_info.pAttachments = attachments.data();
                 framebuffer_create_info.width = vk.swapchain.extent.width;
                 framebuffer_create_info.height = vk.swapchain.extent.height;
                 framebuffer_create_info.layers = 1;
@@ -165,6 +182,21 @@ namespace arbor {
                 if (image_view && vk.device)
                     vkDestroyImageView(vk.device, image_view, nullptr);
                 image_view = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.depth_image_view && vk.device) {
+                vkDestroyImageView(vk.device, vk.swapchain.depth_image_view, nullptr);
+                vk.swapchain.depth_image_view = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.depth_image && vk.device) {
+                vkDestroyImage(vk.device, vk.swapchain.depth_image, nullptr);
+                vk.swapchain.depth_image = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.depth_buffer && vk.device) {
+                vkFreeMemory(vk.device, vk.swapchain.depth_buffer, nullptr);
+                vk.swapchain.depth_buffer = VK_NULL_HANDLE;
             }
 
             if (vk.swapchain.handle && vk.device)

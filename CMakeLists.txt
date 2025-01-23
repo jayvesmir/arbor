@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.30)
 project(arbor CXX)
 
 set(BUILD_SHARED_LIBS false)
-
+set(CMAKE_CXX_SCAN_FOR_MODULES false)
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 
 if(WIN32)
