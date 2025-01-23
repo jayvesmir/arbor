@@ -1,10 +1,12 @@
 #include "arbor/components/renderer.hpp"
-#include <ranges>
-#include <vulkan/vulkan_core.h>
 
 #include "SDL3/SDL_error.h"
 #include "SDL3/SDL_vulkan.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_vulkan.h"
 #include "vulkan/vk_enum_string_helper.h"
+
+#include <ranges>
 
 namespace arbor {
     namespace engine {
@@ -101,7 +103,7 @@ namespace arbor {
 
             if (auto res = make_image(vk.swapchain.extent.width, vk.swapchain.extent.height, vk.swapchain.depth_format,
                                       VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT,
-                                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+                                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vk.config.sample_count);
                 !res) {
                 return std::unexpected(res.error());
             } else {
@@ -113,6 +115,18 @@ namespace arbor {
 
             transition_image_layout(vk.swapchain.depth_image, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
                                     VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+            if (auto res = make_image(vk.swapchain.extent.width, vk.swapchain.extent.height, vk.swapchain.format.format,
+                                      VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                                      VK_IMAGE_ASPECT_COLOR_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vk.config.sample_count);
+                !res) {
+                return std::unexpected(res.error());
+            } else {
+                auto& [image, view, memory] = *res;
+                vk.swapchain.msaa_image = image;
+                vk.swapchain.msaa_image_view = view;
+                vk.swapchain.msaa_image_buffer = memory;
+            }
 
             m_pipelines.back().reload();
 
@@ -135,7 +149,11 @@ namespace arbor {
                     res != VK_SUCCESS)
                     return std::unexpected(fmt::format("failed to create swapchain image view {}: {}", i, string_VkResult(res)));
 
-                std::array<VkImageView, 2> attachments = {vk.swapchain.image_views[i], vk.swapchain.depth_image_view};
+                std::array<VkImageView, 3> attachments = {
+                    vk.swapchain.msaa_image_view,
+                    vk.swapchain.image_views[i],
+                    vk.swapchain.depth_image_view,
+                };
 
                 framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
                 framebuffer_create_info.renderPass = m_pipelines.back().render_pass();
@@ -173,6 +191,11 @@ namespace arbor {
 
             vkDeviceWaitIdle(vk.device);
 
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplSDL3_Shutdown();
+            ImGui::DestroyContext(m_gui.imgui_ctx);
+            m_gui.imgui_ctx = nullptr;
+
             for (auto& framebuffer : vk.swapchain.framebuffers) {
                 if (framebuffer && vk.device)
                     vkDestroyFramebuffer(vk.device, framebuffer, nullptr);
@@ -200,10 +223,28 @@ namespace arbor {
                 vk.swapchain.depth_buffer = VK_NULL_HANDLE;
             }
 
+            if (vk.swapchain.msaa_image_view && vk.device) {
+                vkDestroyImageView(vk.device, vk.swapchain.msaa_image_view, nullptr);
+                vk.swapchain.msaa_image_view = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.msaa_image && vk.device) {
+                vkDestroyImage(vk.device, vk.swapchain.msaa_image, nullptr);
+                vk.swapchain.msaa_image = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.msaa_image_buffer && vk.device) {
+                vkFreeMemory(vk.device, vk.swapchain.msaa_image_buffer, nullptr);
+                vk.swapchain.msaa_image_buffer = VK_NULL_HANDLE;
+            }
+
             if (vk.swapchain.handle && vk.device)
                 vkDestroySwapchainKHR(vk.device, vk.swapchain.handle, nullptr);
 
-            return make_vk_swapchain_and_pipeline();
+            if (auto res = make_vk_swapchain_and_pipeline(); !res)
+                return res;
+
+            return init_imgui();
         }
     } // namespace engine
 } // namespace arbor

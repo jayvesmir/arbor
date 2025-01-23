@@ -6,6 +6,7 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_vulkan.h"
 #include "imgui_internal.h"
+#include <vulkan/vulkan_core.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/euler_angles.hpp"
@@ -34,7 +35,7 @@ namespace arbor {
             init_info.Subpass = 0;
             init_info.MinImageCount = vk.sync.frames_in_flight;
             init_info.ImageCount = vk.sync.frames_in_flight;
-            init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+            init_info.MSAASamples = vk.config.sample_count;
             init_info.RenderPass = m_pipelines.back().render_pass();
 
             if (!ImGui_ImplVulkan_Init(&init_info))
@@ -64,6 +65,16 @@ namespace arbor {
             };
 
             static int32_t current_present_mode_idx = 1;
+
+            static std::unordered_map<const char*, VkSampleCountFlagBits> msaa_sample_counts = {
+                {"2x", VK_SAMPLE_COUNT_2_BIT},
+                {"4x", VK_SAMPLE_COUNT_4_BIT},
+                {"8x", VK_SAMPLE_COUNT_8_BIT},
+            };
+
+            static const char* const msaa_options[] = {"2x", "4x", "8x"};
+
+            static int32_t current_msaa_config_idx = 0;
 
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplSDL3_NewFrame();
@@ -107,6 +118,11 @@ namespace arbor {
             if (ImGui::Combo("presentation mode", &current_present_mode_idx, present_modes_opt,
                              IM_ARRAYSIZE(present_modes_opt))) {
                 vk.config.present_mode = present_modes[present_modes_opt[current_present_mode_idx]];
+                vk.deferred_swapchain_reload = true;
+            }
+
+            if (ImGui::Combo("MSAA", &current_msaa_config_idx, msaa_options, IM_ARRAYSIZE(msaa_options))) {
+                vk.config.sample_count = msaa_sample_counts[msaa_options[current_present_mode_idx]];
                 vk.deferred_swapchain_reload = true;
             }
 

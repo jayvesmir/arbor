@@ -6,7 +6,8 @@ namespace arbor {
     namespace engine {
         std::expected<std::tuple<VkImage, VkImageView, VkDeviceMemory>, std::string>
         renderer::make_image(uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage,
-                             VkImageAspectFlags aspect_mask, VkMemoryPropertyFlags memory_props) {
+                             VkImageAspectFlags aspect_mask, VkMemoryPropertyFlags memory_props,
+                             VkSampleCountFlagBits sample_count) {
 
             VkImage image;
             VkImageView view;
@@ -27,7 +28,7 @@ namespace arbor {
             create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
             create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
             create_info.usage = usage;
-            create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+            create_info.samples = sample_count;
 
             if (auto res = vkCreateImage(vk.device, &create_info, nullptr, &image); res != VK_SUCCESS)
                 return std::unexpected(

@@ -74,8 +74,11 @@ namespace arbor {
             m_rasterizer_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
             m_multisampler_state.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-            m_multisampler_state.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+            m_multisampler_state.rasterizationSamples = m_renderer.vk.config.sample_count;
             m_multisampler_state.minSampleShading = 1.0f;
+
+            if (m_renderer.vk.physical_device.features.sampleRateShading)
+                m_multisampler_state.sampleShadingEnable = VK_TRUE;
 
             m_color_blend_attachment.colorWriteMask =
                 VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -100,8 +103,10 @@ namespace arbor {
             VkRenderPassCreateInfo render_pass_create_info{};
             VkAttachmentReference color_attachment_reference{};
             VkAttachmentReference depth_attachment_reference{};
+            VkAttachmentReference msaa_attachment_reference{};
             VkAttachmentDescription color_attachment_description{};
             VkAttachmentDescription depth_attachment_description{};
+            VkAttachmentDescription msaa_attachment_description{};
 
             subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
             subpass_dependency.dstSubpass = 0;
@@ -114,19 +119,31 @@ namespace arbor {
                 VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
             color_attachment_description.format = m_renderer.vk.swapchain.format.format;
-            color_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+            color_attachment_description.samples = m_renderer.vk.config.sample_count;
             color_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             color_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             color_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             color_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             color_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            color_attachment_description.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
             color_attachment_reference.attachment = 0;
             color_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+            msaa_attachment_description.format = m_renderer.vk.swapchain.format.format;
+            msaa_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+            msaa_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            msaa_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            msaa_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            msaa_attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            msaa_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            msaa_attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+            msaa_attachment_reference.attachment = 1;
+            msaa_attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
             depth_attachment_description.format = m_renderer.vk.swapchain.depth_format;
-            depth_attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+            depth_attachment_description.samples = m_renderer.vk.config.sample_count;
             depth_attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             depth_attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             depth_attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -134,15 +151,17 @@ namespace arbor {
             depth_attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             depth_attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-            depth_attachment_reference.attachment = 1;
+            depth_attachment_reference.attachment = 2;
             depth_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
             subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
             subpass_description.colorAttachmentCount = 1;
             subpass_description.pColorAttachments = &color_attachment_reference;
             subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
+            subpass_description.pResolveAttachments = &msaa_attachment_reference;
 
-            std::array<VkAttachmentDescription, 2> attachments = {color_attachment_description, depth_attachment_description};
+            std::array<VkAttachmentDescription, 3> attachments = {color_attachment_description, msaa_attachment_description,
+                                                                  depth_attachment_description};
 
             render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
             render_pass_create_info.attachmentCount = attachments.size();

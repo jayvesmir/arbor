@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 #include "arbor/components/component.hpp"
 #include "arbor/engine.hpp"
@@ -234,6 +235,10 @@ namespace arbor {
                     VkDeviceMemory depth_buffer;
                     VkImageView depth_image_view;
 
+                    VkImage msaa_image;
+                    VkImageView msaa_image_view;
+                    VkDeviceMemory msaa_image_buffer;
+
                     VkExtent2D extent;
                     VkSurfaceFormatKHR format;
                     VkPresentModeKHR present_mode;
@@ -265,6 +270,7 @@ namespace arbor {
 
                 struct {
                     VkPresentModeKHR present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
+                    VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_2_BIT;
                 } config;
 
                 std::atomic<bool> deferred_swapchain_reload = false;
@@ -319,7 +325,7 @@ namespace arbor {
 
             std::expected<std::tuple<VkImage, VkImageView, VkDeviceMemory>, std::string>
             make_image(uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage, VkImageAspectFlags aspect_mask,
-                       VkMemoryPropertyFlags memory_props);
+                       VkMemoryPropertyFlags memory_props, VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_1_BIT);
 
             std::expected<void, std::string> transition_image_layout(VkImage image, VkImageAspectFlags aspect_mask,
                                                                      VkImageLayout old_layout, VkImageLayout new_layout);

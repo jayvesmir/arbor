@@ -80,6 +80,21 @@ namespace arbor {
                 vk.swapchain.depth_buffer = VK_NULL_HANDLE;
             }
 
+            if (vk.swapchain.msaa_image_view && vk.device) {
+                vkDestroyImageView(vk.device, vk.swapchain.msaa_image_view, nullptr);
+                vk.swapchain.msaa_image_view = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.msaa_image && vk.device) {
+                vkDestroyImage(vk.device, vk.swapchain.msaa_image, nullptr);
+                vk.swapchain.msaa_image = VK_NULL_HANDLE;
+            }
+
+            if (vk.swapchain.msaa_image_buffer && vk.device) {
+                vkFreeMemory(vk.device, vk.swapchain.msaa_image_buffer, nullptr);
+                vk.swapchain.msaa_image_buffer = VK_NULL_HANDLE;
+            }
+
             if (vk.swapchain.handle && vk.device) {
                 vkDestroySwapchainKHR(vk.device, vk.swapchain.handle, nullptr);
                 vk.swapchain.handle = VK_NULL_HANDLE;
@@ -188,7 +203,13 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::record_command_buffer() {
-            static std::array<VkClearValue, 2> clear_values = {
+            static std::array<VkClearValue, 3> clear_values = {
+                VkClearValue{
+                    .color =
+                        {
+                            .float32 = {0.0f, 0.0f, 0.0f, 1.0f},
+                        },
+                },
                 VkClearValue{
                     .color =
                         {
