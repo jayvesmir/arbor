@@ -21,6 +21,10 @@ namespace arbor {
         struct model_3d {
             std::vector<vertex_3d> vertices;
             std::vector<uint32_t> indices;
+
+            static model_3d cube(float scale = 1.0f);
+            static model_3d cube_uv(float scale = 1.0f);
         };
+
     } // namespace engine
 } // namespace arbor

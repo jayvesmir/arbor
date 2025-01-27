@@ -1,4 +1,5 @@
 #include "arbor/engine.hpp"
+#include "arbor/model.hpp"
 #include "glm/ext/matrix_transform.hpp"
 
 #include <print>
@@ -45,16 +46,7 @@ void init(arbor::engine::instance& engine) {
         //                                   blah blah blah
         auto plane_id = scene.create_object().value();
 
-        scene.asset_library()[plane_id].model.vertices = {
-            {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.25f, 0.25f}, {1.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.0f}, {0.25f, 1.0f, 0.25f}, {0.0f, 1.0f}},
-            {{0.5f, -0.5f, 0.0f}, {0.25f, 0.25f, 1.0f}, {0.0f, 0.0f}},
-            {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-        };
-
-        scene.asset_library()[plane_id].model.indices = {
-            0, 2, 1, 1, 3, 0,
-        };
+        scene.asset_library()[plane_id].model = arbor::engine::model_3d::cube(0.5f);
 
         scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty1.jpg"};
     }
