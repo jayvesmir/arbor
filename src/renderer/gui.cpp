@@ -74,7 +74,7 @@ namespace arbor {
 
             static const char* const msaa_options[] = {"2x", "4x", "8x"};
 
-            static int32_t current_msaa_config_idx = 0;
+            static int32_t current_msaa_config_idx = 2;
 
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplSDL3_NewFrame();

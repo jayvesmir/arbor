@@ -270,7 +270,7 @@ namespace arbor {
 
                 struct {
                     VkPresentModeKHR present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
-                    VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_2_BIT;
+                    VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_8_BIT;
                 } config;
 
                 std::atomic<bool> deferred_swapchain_reload = false;
