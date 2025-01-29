@@ -1,9 +1,12 @@
 #pragma once
+#include "arbor/components/components.hpp"
 #include "arbor/scene/asset_library.hpp"
 #include "arbor/scene/camera.hpp"
+#include "arbor/scene/controls.hpp"
 #include "arbor/scene/object.hpp"
 
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -13,6 +16,7 @@ namespace arbor {
 
         class scene {
             friend class engine::instance;
+            friend class engine::renderer;
 
             std::string m_name;
 
@@ -22,6 +26,7 @@ namespace arbor {
             engine::camera m_camera;
             engine::asset_library m_asset_library;
             std::unordered_map<uint64_t, engine::object> m_objects;
+            std::unordered_map<std::string, std::shared_ptr<scene_controls::control>> m_controls;
 
           public:
             scene(const std::string& name, const std::filesystem::path& vertex_shader_src = "",
@@ -44,6 +49,22 @@ namespace arbor {
             constexpr auto& objects() const { return m_objects; }
             constexpr auto& asset_library() { return m_asset_library; }
             constexpr auto& asset_library() const { return m_asset_library; }
+            constexpr auto& controls() const { return m_controls; }
+
+            template <typename T> constexpr void add_control(const std::string& label, const auto&... ctor_args);
+            template <typename T>
+            constexpr std::expected<std::shared_ptr<T>, std::string> control(const std::string& label) const {
+                if (!m_controls.contains(label))
+                    return std::unexpected(fmt::format("no control named '{}'", label));
+                return std::dynamic_pointer_cast<T>(m_controls.at(label));
+            }
+
+          protected:
+            constexpr auto& controls() { return m_controls; }
         };
+
+        template <typename T> constexpr void scene::add_control(const std::string& label, const auto&... ctor_args) {
+            m_controls.emplace(label, std::make_shared<T>(ctor_args...));
+        }
     } // namespace engine
 } // namespace arbor

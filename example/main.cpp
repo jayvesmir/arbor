@@ -1,5 +1,6 @@
 #include "arbor/engine.hpp"
 #include "arbor/model.hpp"
+#include "arbor/scene/controls.hpp"
 #include "glm/ext/matrix_transform.hpp"
 
 #include <print>
@@ -12,6 +13,9 @@ void init(arbor::engine::instance& engine) {
 
     scene.camera().translate(glm::vec3(0.0f, 3.0f, 1.0f));
     scene.camera().rotate(glm::vec3(0.0f, -90.0f, 0.0f));
+
+    scene.add_control<arbor::engine::scene_controls::slider_f32>("plane movement speed", 0.0f, 5.0f, 1.0f);
+    scene.add_control<arbor::engine::scene_controls::slider_f32>("cube rotation speed", 0.0f, 5.0f, 1.0f);
 
     {
         //                                   blah blah blah
@@ -32,9 +36,10 @@ void init(arbor::engine::instance& engine) {
 
         scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
             auto& self = engine.current_scene().objects()[id];
+            static auto speed = engine.current_scene().control<arbor::engine::scene_controls::slider_f32>("plane movement speed");
 
             static float position = 0.0f;
-            position += engine.frame_time_ms() * (0.005f / 2.0f);
+            position += engine.frame_time_ms() * (0.005f / 2.0f) * (*speed)->value();
 
             self.transform() = glm::mat4(1.0f);
             self.transform() =
@@ -44,11 +49,21 @@ void init(arbor::engine::instance& engine) {
 
     {
         //                                   blah blah blah
-        auto plane_id = scene.create_object().value();
+        auto cube_id = scene.create_object().value();
 
-        scene.asset_library()[plane_id].model = arbor::engine::model_3d::cube_uv(0.5f);
+        scene.asset_library()[cube_id].model = arbor::engine::model_3d::cube_uv(0.5f);
+        scene.asset_library()[cube_id].textures[arbor::engine::texture::albedo] = {"assets/cube.png"};
 
-        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/cube.png"};
+        scene.objects()[cube_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
+            auto& self = engine.current_scene().objects()[id];
+            static auto speed = engine.current_scene().control<arbor::engine::scene_controls::slider_f32>("cube rotation speed");
+
+            static float rotation = 0.0f;
+            rotation += engine.frame_time_ms() * (0.25f) * (*speed)->value();
+
+            self.transform() = glm::mat4(1.0f);
+            self.transform() = glm::rotate(self.transform(), -glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+        };
     }
 
     engine.push_scene_and_set_current(scene);

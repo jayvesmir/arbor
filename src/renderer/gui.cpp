@@ -126,6 +126,13 @@ namespace arbor {
                 vk.deferred_swapchain_reload = true;
             }
 
+            if (m_engine.current_scene().controls().size() != 0) {
+                ImGui::SeparatorText("scene controls");
+
+                for (auto& [label, control] : m_engine.current_scene().controls())
+                    control->imgui_draw(label);
+            }
+
             ImGui::End();
 
             ImGui::Render();
