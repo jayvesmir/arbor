@@ -46,9 +46,9 @@ void init(arbor::engine::instance& engine) {
         //                                   blah blah blah
         auto plane_id = scene.create_object().value();
 
-        scene.asset_library()[plane_id].model = arbor::engine::model_3d::cube(0.5f);
+        scene.asset_library()[plane_id].model = arbor::engine::model_3d::cube_uv(0.5f);
 
-        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty1.jpg"};
+        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/cube.png"};
     }
 
     engine.push_scene_and_set_current(scene);

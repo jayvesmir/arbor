@@ -12,6 +12,7 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_vulkan.h"
 #include <algorithm>
+#include <vulkan/vulkan_core.h>
 
 namespace arbor {
     namespace engine {
@@ -132,7 +133,7 @@ namespace arbor {
             m_logger->trace("parent: {}", fmt::ptr(&m_engine));
             m_logger->trace("parent window: {}", fmt::ptr(&m_engine.window()));
 
-            vk.swapchain.depth_format = VK_FORMAT_D24_UNORM_S8_UINT;
+            vk.swapchain.depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
             if (auto res = make_vk_instance(); !res)
                 return res;
