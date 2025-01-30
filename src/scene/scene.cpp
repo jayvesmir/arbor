@@ -18,7 +18,7 @@ namespace arbor {
                 id = rng_dist(rng);
 
             m_objects[id] = {id};
-            m_asset_library[id] = {};
+            m_asset_library[id] = {{}, assets::material::make_default()};
 
             return id;
         }

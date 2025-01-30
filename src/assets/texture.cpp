@@ -12,6 +12,9 @@ namespace arbor {
             if (!m_source)
                 return std::unexpected("missing source for texture");
 
+            if (m_source == "generator")
+                return {};
+
             int32_t _;
 
             if (auto raw_data = stbi_load(m_source->c_str(), &m_width, &m_height, &_, 4); raw_data != nullptr) {
@@ -32,6 +35,8 @@ namespace arbor {
 
             m_pixels.resize(m_width * m_width);
             std::ranges::fill(m_pixels, color);
+
+            m_source = "generator";
             return {};
         }
     } // namespace assets

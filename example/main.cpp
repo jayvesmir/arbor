@@ -22,7 +22,7 @@ void init(arbor::engine::instance& engine) {
         auto plane_id = scene.create_object().value();
 
         scene.asset_library()[plane_id].model = arbor::assets::model_3d::plane(0.5f, 0.5f);
-        scene.asset_library()[plane_id].textures[arbor::assets::texture::albedo] = {"assets/kitty0.jpg"};
+        scene.asset_library()[plane_id].material.textures()[arbor::assets::texture::albedo] = {"assets/kitty0.jpg"};
 
         scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
             auto& self = engine.current_scene().objects()[id];
@@ -42,7 +42,7 @@ void init(arbor::engine::instance& engine) {
         auto cube_id = scene.create_object().value();
 
         scene.asset_library()[cube_id].model = arbor::assets::model_3d::cube_uv(0.5f, 0.5f, 0.5f);
-        scene.asset_library()[cube_id].textures[arbor::assets::texture::albedo] = {"assets/cube.png"};
+        scene.asset_library()[cube_id].material.textures()[arbor::assets::texture::albedo] = {"assets/cube.png"};
 
         scene.objects()[cube_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
             auto& self = engine.current_scene().objects()[id];

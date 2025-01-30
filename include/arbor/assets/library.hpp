@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #include "arbor/assets/model.hpp"
-#include "arbor/assets/texture.hpp"
+#include "arbor/assets/material.hpp"
 #include "arbor/types.hpp"
 
 namespace arbor {
@@ -12,7 +12,7 @@ namespace arbor {
           public:
             struct entry {
                 assets::model_3d model;
-                std::unordered_map<assets::texture::etype, assets::texture> textures;
+                assets::material material;
             };
 
           private:
