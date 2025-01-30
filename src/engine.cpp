@@ -10,7 +10,7 @@
 namespace arbor {
     namespace engine {
         instance::instance() {
-            m_logger = engine::make_logger("engine");
+            m_logger = arbor::make_logger("engine");
         }
 
         instance::~instance() {
@@ -52,7 +52,7 @@ namespace arbor {
             return {};
         }
 
-        std::expected<void, std::string> instance::push_scene_and_set_current(const engine::scene& scene) {
+        std::expected<void, std::string> instance::push_scene_and_set_current(const scene::instance& scene) {
             m_scenes.emplace(scene.name(), scene);
             m_current_scene = m_scenes.find(scene.name());
             return {};
@@ -132,7 +132,7 @@ namespace arbor {
                         current_scene().camera().translate(translation);
                         current_scene().camera().rotate(glm::vec3(-camera_sensitivity * m_input_manager.mouse_delta().x,
                                                                   camera_sensitivity * m_input_manager.mouse_delta().y, 0.0f) *
-                                                        static_cast<float>(frame_time_ms()));
+                                                        static_cast<float32_t>(frame_time_ms()));
                     }
                 }
 

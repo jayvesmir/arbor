@@ -1,6 +1,6 @@
 #include "arbor/components/renderer.hpp"
 
-#include "arbor/model.hpp"
+#include "arbor/assets/model.hpp"
 #include "vulkan/vk_enum_string_helper.h"
 
 namespace arbor {
@@ -87,7 +87,7 @@ namespace arbor {
                 if (!m_renderer.m_textures.contains(object_it->first))
                     return std::unexpected(fmt::format("object {} is missing a texture", object_it->first));
 
-                auto& albedo = m_renderer.m_textures[object_it->first][engine::texture::albedo];
+                auto& albedo = m_renderer.m_textures[object_it->first][assets::texture::albedo];
                 image_info.imageView = albedo.image_view();
                 image_info.sampler = albedo.sampler();
 

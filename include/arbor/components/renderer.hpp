@@ -6,10 +6,10 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
+#include "arbor/assets/model.hpp"
+#include "arbor/assets/texture.hpp"
 #include "arbor/components/component.hpp"
 #include "arbor/engine.hpp"
-#include "arbor/model.hpp"
-#include "arbor/scene/texture.hpp"
 #include "arbor/types.hpp"
 #include "arbor/window.hpp"
 
@@ -196,7 +196,7 @@ namespace arbor {
 
                 void destroy();
 
-                std::expected<void, std::string> load(const engine::texture& source, engine::renderer& renderer);
+                std::expected<void, std::string> load(const assets::texture& source, engine::renderer& renderer);
 
                 constexpr auto image() { return m_image; }
                 constexpr auto sampler() { return m_sampler; }
@@ -281,7 +281,7 @@ namespace arbor {
 
             std::vector<renderer::pipeline> m_pipelines;
 
-            std::unordered_map<uint64_t, std::unordered_map<engine::texture::etype, renderer::texture>> m_textures;
+            std::unordered_map<uint64_t, std::unordered_map<assets::texture::etype, renderer::texture>> m_textures;
 
             struct {
                 ImGuiContext* imgui_ctx = nullptr;

@@ -57,7 +57,7 @@ namespace arbor {
             m_dynamic_state.dynamicStateCount = m_dynamic_states.size();
             m_dynamic_state.pDynamicStates = m_dynamic_states.data();
 
-            auto&& [vertex_binding, vertex_attributes] = engine::vertex_3d::make_vk_binding();
+            auto&& [vertex_binding, vertex_attributes] = assets::vertex_3d::make_vk_binding();
 
             m_vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             m_vertex_input_state.vertexBindingDescriptionCount = 1;

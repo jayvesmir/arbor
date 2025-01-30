@@ -1,12 +1,12 @@
+#include "arbor/assets/model.hpp"
 #include "arbor/engine.hpp"
-#include "arbor/model.hpp"
 #include "arbor/scene/controls.hpp"
 #include "glm/ext/matrix_transform.hpp"
 
 #include <print>
 
 void init(arbor::engine::instance& engine) {
-    arbor::engine::scene scene("main");
+    arbor::scene::instance scene("main");
 
     scene.vertex_shader("example/shaders/basic.vert");
     scene.fragment_shader("example/shaders/basic.frag");
@@ -14,19 +14,19 @@ void init(arbor::engine::instance& engine) {
     scene.camera().translate(glm::vec3(0.0f, 3.0f, 1.0f));
     scene.camera().rotate(glm::vec3(0.0f, -90.0f, 0.0f));
 
-    scene.add_control<arbor::engine::scene_controls::slider_f32>("plane movement speed", 0.0f, 5.0f, 0.0f);
-    scene.add_control<arbor::engine::scene_controls::slider_f32>("cube rotation speed", 0.0f, 5.0f, 0.0f);
+    scene.add_control<arbor::scene::controls::slider_f32>("plane movement speed", 0.0f, 5.0f, 0.0f);
+    scene.add_control<arbor::scene::controls::slider_f32>("cube rotation speed", 0.0f, 5.0f, 0.0f);
 
     {
         //                                   blah blah blah
         auto plane_id = scene.create_object().value();
 
-        scene.asset_library()[plane_id].model = arbor::engine::model_3d::plane(0.5f, 0.5f);
-        scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty0.jpg"};
+        scene.asset_library()[plane_id].model = arbor::assets::model_3d::plane(0.5f, 0.5f);
+        scene.asset_library()[plane_id].textures[arbor::assets::texture::albedo] = {"assets/kitty0.jpg"};
 
         scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
             auto& self = engine.current_scene().objects()[id];
-            static auto speed = engine.current_scene().control<arbor::engine::scene_controls::slider_f32>("plane movement speed");
+            static auto speed = engine.current_scene().control<arbor::scene::controls::slider_f32>("plane movement speed");
 
             static float position = 0.0f;
             position += engine.frame_time_ms() * (0.005f / 2.0f) * (*speed)->value();
@@ -41,12 +41,12 @@ void init(arbor::engine::instance& engine) {
         //                                   blah blah blah
         auto cube_id = scene.create_object().value();
 
-        scene.asset_library()[cube_id].model = arbor::engine::model_3d::cube(0.5f, 0.5f, 0.5f);
-        scene.asset_library()[cube_id].textures[arbor::engine::texture::albedo] = {"assets/cube.png"};
+        scene.asset_library()[cube_id].model = arbor::assets::model_3d::cube_uv(0.5f, 0.5f, 0.5f);
+        scene.asset_library()[cube_id].textures[arbor::assets::texture::albedo] = {"assets/cube.png"};
 
         scene.objects()[cube_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
             auto& self = engine.current_scene().objects()[id];
-            static auto speed = engine.current_scene().control<arbor::engine::scene_controls::slider_f32>("cube rotation speed");
+            static auto speed = engine.current_scene().control<arbor::scene::controls::slider_f32>("cube rotation speed");
 
             static float rotation = 0.0f;
             rotation += engine.frame_time_ms() * (0.25f) * (*speed)->value();

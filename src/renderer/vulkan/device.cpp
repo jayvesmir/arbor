@@ -95,7 +95,7 @@ namespace arbor {
 
             vk.device_ext.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-            float queue_priority = 1.0f;
+            float32_t queue_priority = 1.0f;
             for (auto qf : qf_set) {
                 VkDeviceQueueCreateInfo queue_create_info{};
                 queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;

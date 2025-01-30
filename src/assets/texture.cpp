@@ -1,4 +1,4 @@
-#include "arbor/scene/texture.hpp"
+#include "arbor/assets/texture.hpp"
 
 #include <algorithm>
 #include <span>
@@ -7,7 +7,7 @@
 #include "stb_image.h"
 
 namespace arbor {
-    namespace engine {
+    namespace assets {
         std::expected<void, std::string> texture::load() {
             if (!m_source)
                 return std::unexpected("missing source for texture");
@@ -34,5 +34,5 @@ namespace arbor {
             std::ranges::fill(m_pixels, color);
             return {};
         }
-    } // namespace engine
+    } // namespace assets
 } // namespace arbor

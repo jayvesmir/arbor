@@ -1,6 +1,6 @@
 #include "arbor/components/renderer.hpp"
 
-#include "arbor/model.hpp"
+#include "arbor/assets/model.hpp"
 #include "vulkan/vk_enum_string_helper.h"
 #include <vulkan/vulkan_core.h>
 
@@ -151,7 +151,7 @@ namespace arbor {
 
         std::expected<void, std::string> renderer::make_vertex_buffer() {
             uint64_t size = 0;
-            std::vector<engine::vertex_3d> vertices;
+            std::vector<assets::vertex_3d> vertices;
             for (auto [id, object] : m_engine.current_scene().objects()) {
                 size += m_engine.current_scene().asset_library()[id].model.vertices.size() *
                         sizeof(*m_engine.current_scene().asset_library()[id].model.vertices.begin());

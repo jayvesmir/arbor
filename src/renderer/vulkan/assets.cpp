@@ -55,7 +55,7 @@ namespace arbor {
             }
         }
 
-        std::expected<void, std::string> renderer::texture::load(const engine::texture& source, engine::renderer& renderer) {
+        std::expected<void, std::string> renderer::texture::load(const assets::texture& source, engine::renderer& renderer) {
             destroy();
 
             m_width = source.width();

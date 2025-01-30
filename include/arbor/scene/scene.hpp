@@ -1,6 +1,6 @@
 #pragma once
+#include "arbor/assets/library.hpp"
 #include "arbor/components/components.hpp"
-#include "arbor/scene/asset_library.hpp"
 #include "arbor/scene/camera.hpp"
 #include "arbor/scene/controls.hpp"
 #include "arbor/scene/object.hpp"
@@ -13,8 +13,10 @@
 namespace arbor {
     namespace engine {
         class instance;
+    }
 
-        class scene {
+    namespace scene {
+        class instance {
             friend class engine::instance;
             friend class engine::renderer;
 
@@ -24,15 +26,15 @@ namespace arbor {
             std::filesystem::path m_fragment_shader;
 
             engine::camera m_camera;
-            engine::asset_library m_asset_library;
+            assets::library m_asset_library;
             std::unordered_map<uint64_t, engine::object> m_objects;
-            std::unordered_map<std::string, std::shared_ptr<scene_controls::control>> m_controls;
+            std::unordered_map<std::string, std::shared_ptr<scene::controls::control>> m_controls;
 
           public:
-            scene(const std::string& name, const std::filesystem::path& vertex_shader_src = "",
-                  const std::filesystem::path& fragment_shader_src = "");
+            instance(const std::string& name, const std::filesystem::path& vertex_shader_src = "",
+                     const std::filesystem::path& fragment_shader_src = "");
 
-            bool operator==(const engine::scene& other) const;
+            bool operator==(const scene::instance& other) const;
 
             constexpr auto vertex_shader(const std::filesystem::path& src) { m_vertex_shader = src; }
             constexpr auto fragment_shader(const std::filesystem::path& src) { m_fragment_shader = src; }
@@ -63,8 +65,8 @@ namespace arbor {
             constexpr auto& controls() { return m_controls; }
         };
 
-        template <typename T> constexpr void scene::add_control(const std::string& label, const auto&... ctor_args) {
+        template <typename T> constexpr void instance::add_control(const std::string& label, const auto&... ctor_args) {
             m_controls.emplace(label, std::make_shared<T>(ctor_args...));
         }
-    } // namespace engine
+    } // namespace scene
 } // namespace arbor

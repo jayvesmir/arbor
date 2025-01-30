@@ -31,11 +31,11 @@ namespace arbor {
             std::unordered_map<engine::component::etype, std::unique_ptr<engine::component>> m_components;
 
             std::atomic<bool> m_running;
-            std::unordered_map<std::string, engine::scene> m_scenes;
-            std::optional<std::unordered_map<std::string, engine::scene>::iterator> m_current_scene;
+            std::unordered_map<std::string, scene::instance> m_scenes;
+            std::optional<std::unordered_map<std::string, scene::instance>::iterator> m_current_scene;
 
             uint64_t m_frame_count = 0;
-            double m_frame_time_ns = 0;
+            float64_t m_frame_time_ns = 0;
             bool m_camera_ownership = false;
 
           public:
@@ -46,7 +46,7 @@ namespace arbor {
             instance(const instance&) = delete;
 
             std::expected<void, std::string> run(const engine::application_config& app_config);
-            std::expected<void, std::string> push_scene_and_set_current(const engine::scene& scene);
+            std::expected<void, std::string> push_scene_and_set_current(const scene::instance& scene);
 
             constexpr auto frame_count() const { return m_frame_count; }
             constexpr auto frame_time_ns() const { return m_frame_time_ns; };

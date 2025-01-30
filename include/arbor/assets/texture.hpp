@@ -8,7 +8,7 @@
 #include "arbor/types.hpp"
 
 namespace arbor {
-    namespace engine {
+    namespace assets {
         class texture {
           public:
             struct pixel_rgba {
@@ -40,5 +40,5 @@ namespace arbor {
             constexpr auto height() const { return m_height; }
             constexpr auto& pixels() const { return m_pixels; }
         };
-    } // namespace engine
+    } // namespace assets
 } // namespace arbor

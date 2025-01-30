@@ -1,6 +1,6 @@
 #include "arbor/components/renderer.hpp"
 
-#include "arbor/model.hpp"
+#include "arbor/assets/model.hpp"
 #include "arbor/types.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -331,8 +331,9 @@ namespace arbor {
             static engine::detail::mvp mvp;
             mvp.view = m_engine.current_scene().camera().view_matrix();
 
-            mvp.projection = glm::perspective(
-                glm::radians(75.0f), static_cast<float>(m_engine.window().width()) / m_engine.window().height(), 1e-6f, 1e+6f);
+            mvp.projection =
+                glm::perspective(glm::radians(75.0f),
+                                 static_cast<float32_t>(m_engine.window().width()) / m_engine.window().height(), 1e-6f, 1e+6f);
             mvp.projection[1][1] *= -1.0;
 
             uint32_t ubo_offset = 0;

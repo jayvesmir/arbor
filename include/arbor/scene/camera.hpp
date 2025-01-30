@@ -1,6 +1,6 @@
 #pragma once
 
-#include "arbor/model.hpp"
+#include "arbor/assets/model.hpp"
 #include "arbor/types.hpp"
 
 namespace arbor {
