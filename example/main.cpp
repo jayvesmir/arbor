@@ -14,14 +14,14 @@ void init(arbor::engine::instance& engine) {
     scene.camera().translate(glm::vec3(0.0f, 3.0f, 1.0f));
     scene.camera().rotate(glm::vec3(0.0f, -90.0f, 0.0f));
 
-    scene.add_control<arbor::engine::scene_controls::slider_f32>("plane movement speed", 0.0f, 5.0f, 1.0f);
-    scene.add_control<arbor::engine::scene_controls::slider_f32>("cube rotation speed", 0.0f, 5.0f, 1.0f);
+    scene.add_control<arbor::engine::scene_controls::slider_f32>("plane movement speed", 0.0f, 5.0f, 0.0f);
+    scene.add_control<arbor::engine::scene_controls::slider_f32>("cube rotation speed", 0.0f, 5.0f, 0.0f);
 
     {
         //                                   blah blah blah
         auto plane_id = scene.create_object().value();
 
-        scene.asset_library()[plane_id].model = arbor::engine::model_3d::plane(0.5f);
+        scene.asset_library()[plane_id].model = arbor::engine::model_3d::plane(0.5f, 0.5f);
         scene.asset_library()[plane_id].textures[arbor::engine::texture::albedo] = {"assets/kitty0.jpg"};
 
         scene.objects()[plane_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {
@@ -41,7 +41,7 @@ void init(arbor::engine::instance& engine) {
         //                                   blah blah blah
         auto cube_id = scene.create_object().value();
 
-        scene.asset_library()[cube_id].model = arbor::engine::model_3d::cube_uv(0.5f);
+        scene.asset_library()[cube_id].model = arbor::engine::model_3d::cube(0.5f, 0.5f, 0.5f);
         scene.asset_library()[cube_id].textures[arbor::engine::texture::albedo] = {"assets/cube.png"};
 
         scene.objects()[cube_id].callbacks().on_update = [](arbor::engine::instance& engine, uint64_t id) {

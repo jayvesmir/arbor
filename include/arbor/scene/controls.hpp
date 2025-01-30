@@ -35,7 +35,6 @@ namespace arbor {
               protected:
                 std::expected<void, std::string> imgui_draw(const std::string& label) override;
             };
-
         } // namespace scene_controls
     } // namespace engine
 } // namespace arbor

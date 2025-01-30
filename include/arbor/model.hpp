@@ -22,10 +22,10 @@ namespace arbor {
             std::vector<vertex_3d> vertices;
             std::vector<uint32_t> indices;
 
-            static model_3d cube(float scale = 1.0f);
-            static model_3d cube_uv(float scale = 1.0f);
+            static model_3d cube(float scale_x = 1.0f, float scale_y = 1.0f, float scale_z = 1.0f);
+            static model_3d cube_uv(float scale_x = 1.0f, float scale_y = 1.0f, float scale_z = 1.0f);
 
-            static model_3d plane(float scale = 1.0f);
+            static model_3d plane(float scale_x = 1.0f, float scale_y = 1.0f);
         };
     } // namespace engine
 } // namespace arbor
