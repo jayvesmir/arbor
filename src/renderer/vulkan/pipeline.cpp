@@ -71,7 +71,7 @@ namespace arbor {
             m_rasterizer_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
             m_rasterizer_state.polygonMode = VK_POLYGON_MODE_FILL;
             m_rasterizer_state.lineWidth = 1.0f;
-            m_rasterizer_state.cullMode = VK_CULL_MODE_NONE;
+            m_rasterizer_state.cullMode = VK_CULL_MODE_BACK_BIT;
             m_rasterizer_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
             m_multisampler_state.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
