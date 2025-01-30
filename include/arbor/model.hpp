@@ -24,7 +24,8 @@ namespace arbor {
 
             static model_3d cube(float scale = 1.0f);
             static model_3d cube_uv(float scale = 1.0f);
-        };
 
+            static model_3d plane(float scale = 1.0f);
+        };
     } // namespace engine
 } // namespace arbor

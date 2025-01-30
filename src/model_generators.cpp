@@ -66,5 +66,22 @@ namespace arbor {
 
             return out;
         }
+
+        model_3d model_3d::plane(float scale) {
+            model_3d out;
+
+            out.vertices = {
+                {{-scale, -scale, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}},
+                {{scale, scale, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+                {{-scale, scale, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+                {{scale, -scale, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
+            };
+
+            out.indices = {
+                0, 1, 2, 0, 3, 1,
+            };
+
+            return out;
+        }
     } // namespace engine
 } // namespace arbor
