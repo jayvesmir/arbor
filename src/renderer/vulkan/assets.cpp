@@ -9,7 +9,7 @@ namespace arbor {
         std::expected<void, std::string> renderer::load_assets() {
             m_logger->debug("loading assets onto GPU");
 
-            for (auto& [id, object] : m_engine.current_scene().objects()) {
+            for (auto& id : m_engine.current_scene().drawable_objects()) {
                 auto& asset_library_entry = m_engine.current_scene().asset_library()[id];
 
                 for (auto& [type, texture] : asset_library_entry.material.textures()) {

@@ -94,7 +94,8 @@ namespace arbor {
             ImGui::Text("frametime: %.03f ms (%.03f ms avg.)", m_engine.frame_time_ms(), 1000.f / io.Framerate);
             ImGui::Text("framerate: %.03f (%.03f avg.)", 1000.0f / m_engine.frame_time_ms(), io.Framerate);
             ImGui::Text("frames drawn: %llu", m_engine.frame_count());
-            ImGui::Text("objects: %zu", m_engine.current_scene().objects().size());
+            ImGui::Text("objects: %zu (%zu drawable)", m_engine.current_scene().objects().size(),
+                        m_engine.current_scene().drawable_objects().size());
 
             ImGui::SeparatorText("info");
 

@@ -32,7 +32,11 @@ namespace arbor {
             };
         } // namespace detail
 
+        class instance;
+
         class renderer : public engine::component {
+            friend class engine::instance;
+
           public:
             class shader {
                 friend class renderer;
@@ -231,7 +235,6 @@ namespace arbor {
                     std::vector<VkFramebuffer> framebuffers;
 
                     VkImage depth_image;
-                    VkFormat depth_format;
                     VkDeviceMemory depth_buffer;
                     VkImageView depth_image_view;
 
@@ -243,6 +246,7 @@ namespace arbor {
                     VkSurfaceFormatKHR format;
                     VkPresentModeKHR present_mode;
                     VkSurfaceCapabilitiesKHR surface_capabilities;
+                    VkFormat depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT;
                 } swapchain;
 
                 VkDevice device = VK_NULL_HANDLE;
@@ -273,6 +277,7 @@ namespace arbor {
                     VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_8_BIT;
                 } config;
 
+                std::atomic<bool> deferred_scene_reload = false;
                 std::atomic<bool> deferred_swapchain_reload = false;
 
                 std::vector<const char*> device_ext;
@@ -298,6 +303,9 @@ namespace arbor {
             std::expected<void, std::string> update() override;
 
             std::expected<void, std::string> resize_viewport();
+
+          protected:
+            std::expected<void, std::string> scene_reload();
 
           private:
             std::expected<uint32_t, std::string> acquire_image();

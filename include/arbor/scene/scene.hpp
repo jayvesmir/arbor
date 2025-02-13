@@ -1,6 +1,7 @@
 #pragma once
 #include "arbor/assets/library.hpp"
 #include "arbor/components/components.hpp"
+#include "arbor/configs.hpp"
 #include "arbor/scene/camera.hpp"
 #include "arbor/scene/controls.hpp"
 #include "arbor/scene/object.hpp"
@@ -11,10 +12,6 @@
 #include <unordered_map>
 
 namespace arbor {
-    namespace engine {
-        class instance;
-    }
-
     namespace scene {
         class instance {
             friend class engine::instance;
@@ -27,6 +24,10 @@ namespace arbor {
 
             engine::camera m_camera;
             assets::library m_asset_library;
+
+            engine::internal_callback_config m_internal_callbacks;
+
+            std::vector<uint64_t> m_drawable_objects;
             std::unordered_map<uint64_t, engine::object> m_objects;
             std::unordered_map<std::string, std::shared_ptr<scene::controls::control>> m_controls;
 
@@ -53,6 +54,9 @@ namespace arbor {
             constexpr auto& asset_library() const { return m_asset_library; }
             constexpr auto& controls() const { return m_controls; }
 
+            std::expected<void, std::string> commit();
+            bool is_object_drawable(uint64_t object_id);
+
             template <typename T> constexpr void add_control(const std::string& label, const auto&... ctor_args);
             template <typename T>
             constexpr std::expected<std::shared_ptr<T>, std::string> control(const std::string& label) const {
@@ -63,6 +67,10 @@ namespace arbor {
 
           protected:
             constexpr auto& controls() { return m_controls; }
+            constexpr auto& drawable_objects() { return m_drawable_objects; }
+
+            constexpr auto& internal_callbacks() const { return m_internal_callbacks; }
+            constexpr auto internal_callbacks(const engine::internal_callback_config& config) { m_internal_callbacks = config; }
         };
 
         template <typename T> constexpr void instance::add_control(const std::string& label, const auto&... ctor_args) {

@@ -13,28 +13,28 @@ namespace arbor {
         class component {
           public:
             enum etype {
-                invalid  = -1,
+                invalid = -1,
                 renderer = 0,
             };
 
           protected:
             std::string m_identifier = "invalid";
-            component::etype m_type  = etype::invalid;
+            component::etype m_type = etype::invalid;
             std::shared_ptr<spdlog::logger> m_logger;
 
           public:
-            component()          = default;
+            component() = default;
             virtual ~component() = default;
 
-            component(component&&)      = delete;
+            component(component&&) = delete;
             component(const component&) = delete;
 
             std::shared_ptr<spdlog::logger> initialize_component_logger();
             constexpr auto type() const { return m_type; }
             constexpr auto identifier() const { return m_identifier; }
 
-            virtual void shutdown()                           = 0;
-            virtual std::expected<void, std::string> init()   = 0;
+            virtual void shutdown() = 0;
+            virtual std::expected<void, std::string> init() = 0;
             virtual std::expected<void, std::string> update() = 0;
         };
     } // namespace engine

@@ -46,7 +46,7 @@ namespace arbor {
             instance(const instance&) = delete;
 
             std::expected<void, std::string> run(const engine::application_config& app_config);
-            std::expected<void, std::string> push_scene_and_set_current(const scene::instance& scene);
+            std::expected<scene::instance*, std::string> push_scene_and_set_current(const scene::instance& scene);
 
             constexpr auto frame_count() const { return m_frame_count; }
             constexpr auto frame_time_ns() const { return m_frame_time_ns; };
@@ -65,6 +65,8 @@ namespace arbor {
             constexpr auto& window() const { return m_window; }
 
           private:
+            std::expected<void, std::string> on_scene_change();
+
             std::expected<void, std::string> create_renderer();
             std::expected<void, std::string> initialize_components();
             std::expected<void, std::string> create_app();

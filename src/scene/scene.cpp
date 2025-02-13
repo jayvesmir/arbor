@@ -22,5 +22,31 @@ namespace arbor {
 
             return id;
         }
+
+        bool instance::is_object_drawable(uint64_t object_id) {
+            if (!m_asset_library.entries().contains(object_id))
+                return false;
+
+            if (m_asset_library[object_id].model.vertices.empty() || m_asset_library[object_id].model.indices.empty())
+                return false;
+
+            return true;
+        }
+
+        std::expected<void, std::string> instance::commit() {
+            m_drawable_objects.clear();
+
+            for (auto& [id, obj] : m_objects) {
+                if (is_object_drawable(id))
+                    m_drawable_objects.push_back(id);
+            }
+
+            if (m_internal_callbacks.on_scene_change.has_value()) {
+                if (auto res = std::invoke(*m_internal_callbacks.on_scene_change); !res)
+                    return res;
+            }
+
+            return {};
+        }
     } // namespace scene
 } // namespace arbor

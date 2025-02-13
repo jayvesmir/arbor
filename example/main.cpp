@@ -48,20 +48,21 @@ void init(arbor::engine::instance& engine) {
             auto& self = engine.current_scene().objects()[id];
             static auto speed = engine.current_scene().control<arbor::scene::controls::slider_f32>("cube rotation speed");
 
-            static float rotation = 0.0f;
-            rotation += engine.frame_time_ms() * (0.25f) * (*speed)->value();
-
-            self.transform() = glm::mat4(1.0f);
-            self.transform() = glm::rotate(self.transform(), -glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+            self.transform() = glm::rotate(
+                self.transform(), static_cast<float>(-glm::radians(engine.frame_time_ms() * (0.25f) * (*speed)->value())),
+                glm::vec3(0.0f, 0.0f, 1.0f));
         };
     }
 
+    scene.create_object(); // non-drawable
+
+    scene.commit();
     engine.push_scene_and_set_current(scene);
 }
 
 void update(arbor::engine::instance& engine) {
     if (engine.frame_count() == 0) {
-        std::println("first frame!!!!");
+        std::println("first frame!!!");
     }
 }
 

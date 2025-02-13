@@ -133,8 +133,6 @@ namespace arbor {
             m_logger->trace("parent: {}", fmt::ptr(&m_engine));
             m_logger->trace("parent window: {}", fmt::ptr(&m_engine.window()));
 
-            vk.swapchain.depth_format = VK_FORMAT_D32_SFLOAT_S8_UINT;
-
             if (auto res = make_vk_instance(); !res)
                 return res;
 
@@ -260,8 +258,7 @@ namespace arbor {
             uint32_t index_offset = 0;
             uint32_t vertex_offset = 0;
             uint32_t ubo_offset = 0;
-            for (auto& [id, object] : m_engine.current_scene().objects()) {
-
+            for (auto& id : m_engine.current_scene().drawable_objects()) {
                 vkCmdBindDescriptorSets(current_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelines.back().m_pipeline_layout, 0,
                                         1, &m_pipelines.back().m_descriptor_sets[vk.sync.current_frame + ubo_offset], 0, nullptr);
                 vkCmdDrawIndexed(current_cmd_buf, m_engine.current_scene().asset_library()[id].model.indices.size(), 1,
@@ -337,13 +334,17 @@ namespace arbor {
             mvp.projection[1][1] *= -1.0;
 
             uint32_t ubo_offset = 0;
-            for (auto& [id, object] : m_engine.current_scene().objects()) {
-                mvp.model = object.transform();
+            for (auto& id : m_engine.current_scene().drawable_objects()) {
+                mvp.model = m_engine.current_scene().objects()[id].transform();
                 vk.uniform_buffers[vk.sync.current_frame + ubo_offset].write_data(&mvp, sizeof(mvp));
                 ubo_offset += vk.sync.frames_in_flight;
             }
 
             return {};
+        }
+
+        std::expected<void, std::string> renderer::scene_reload() {
+            return std::unexpected("renderer::scene_reload() unimplemented");
         }
     } // namespace engine
 } // namespace arbor

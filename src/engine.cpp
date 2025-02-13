@@ -52,10 +52,15 @@ namespace arbor {
             return {};
         }
 
-        std::expected<void, std::string> instance::push_scene_and_set_current(const scene::instance& scene) {
+        std::expected<scene::instance*, std::string> instance::push_scene_and_set_current(const scene::instance& scene) {
+            static engine::internal_callback_config default_scene_callbacks = {
+                .on_scene_change = std::bind(&instance::on_scene_change, this),
+            };
+
             m_scenes.emplace(scene.name(), scene);
+            m_scenes.at(scene.name()).internal_callbacks(default_scene_callbacks);
             m_current_scene = m_scenes.find(scene.name());
-            return {};
+            return &m_scenes.at(scene.name());
         }
 
         std::expected<void, std::string> instance::run(const engine::application_config& app_config) {
@@ -175,6 +180,11 @@ namespace arbor {
             m_input_manager.update_from_event(event);
 
             return {};
+        }
+
+        std::expected<void, std::string> instance::on_scene_change() {
+            auto renderer = dynamic_cast<engine::renderer*>(m_components.at(component::etype::renderer).get());
+            return renderer->scene_reload();
         }
     } // namespace engine
 } // namespace arbor

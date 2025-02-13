@@ -2,8 +2,8 @@
 
 #include <unordered_map>
 
-#include "arbor/assets/model.hpp"
 #include "arbor/assets/material.hpp"
+#include "arbor/assets/model.hpp"
 #include "arbor/types.hpp"
 
 namespace arbor {

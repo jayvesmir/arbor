@@ -25,7 +25,8 @@ namespace arbor {
             layout_bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
             // every object has a ubo and image sampler for each frame in flight
-            const auto n_sets = m_renderer.vk.sync.frames_in_flight * m_renderer.m_engine.current_scene().objects().size();
+            const auto n_sets =
+                m_renderer.vk.sync.frames_in_flight * m_renderer.m_engine.current_scene().drawable_objects().size();
 
             pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             pool_sizes[0].descriptorCount = n_sets;
@@ -70,7 +71,7 @@ namespace arbor {
                 res != VK_SUCCESS)
                 return std::unexpected(fmt::format("failed to allocate descriptor sets: {}", string_VkResult(res)));
 
-            auto object_it = m_renderer.m_engine.current_scene().objects().begin();
+            auto object_id_it = m_renderer.m_engine.current_scene().drawable_objects().begin();
 
             for (auto i = 0ull; i < n_sets; i++) {
                 VkDescriptorBufferInfo buffer_info{};
@@ -84,10 +85,10 @@ namespace arbor {
 
                 image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-                if (!m_renderer.m_textures.contains(object_it->first))
-                    return std::unexpected(fmt::format("object {} is missing a texture", object_it->first));
+                if (!m_renderer.m_textures.contains(*object_id_it))
+                    return std::unexpected(fmt::format("object {} is missing a texture", *object_id_it));
 
-                auto& albedo = m_renderer.m_textures[object_it->first][assets::texture::albedo];
+                auto& albedo = m_renderer.m_textures[*object_id_it][assets::texture::albedo];
                 image_info.imageView = albedo.image_view();
                 image_info.sampler = albedo.sampler();
 
@@ -110,7 +111,7 @@ namespace arbor {
                 vkUpdateDescriptorSets(m_renderer.vk.device, writes.size(), writes.data(), 0, nullptr);
 
                 if ((i + 1) % m_renderer.vk.sync.frames_in_flight == 0)
-                    object_it++;
+                    object_id_it++;
             }
 
             return {};

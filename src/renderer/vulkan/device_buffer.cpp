@@ -152,7 +152,7 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_vertex_buffer() {
             uint64_t size = 0;
             std::vector<assets::vertex_3d> vertices;
-            for (auto [id, object] : m_engine.current_scene().objects()) {
+            for (auto id : m_engine.current_scene().drawable_objects()) {
                 size += m_engine.current_scene().asset_library()[id].model.vertices.size() *
                         sizeof(*m_engine.current_scene().asset_library()[id].model.vertices.begin());
 
@@ -177,7 +177,7 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_index_buffer() {
             uint64_t size = 0;
             std::vector<uint32_t> indices;
-            for (auto [id, object] : m_engine.current_scene().objects()) {
+            for (auto id : m_engine.current_scene().drawable_objects()) {
                 size += m_engine.current_scene().asset_library()[id].model.indices.size() *
                         sizeof(*m_engine.current_scene().asset_library()[id].model.indices.begin());
 
@@ -201,7 +201,7 @@ namespace arbor {
         std::expected<void, std::string> renderer::make_uniform_buffers() {
             auto size = sizeof(engine::detail::mvp);
 
-            vk.uniform_buffers.resize(vk.sync.frames_in_flight * m_engine.current_scene().objects().size());
+            vk.uniform_buffers.resize(vk.sync.frames_in_flight * m_engine.current_scene().drawable_objects().size());
 
             for (auto& buffer : vk.uniform_buffers) {
                 if (auto res = buffer.make(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
