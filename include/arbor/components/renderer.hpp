@@ -136,7 +136,7 @@ namespace arbor {
 
                 pipeline(const pipeline&) = delete;
 
-                std::expected<void, std::string> reload();
+                std::expected<void, std::string> reload(bool rebuild = true);
                 std::expected<void, std::string> bind_shader(const std::filesystem::path& glsl_source, shader::etype type);
 
               protected:
@@ -156,6 +156,8 @@ namespace arbor {
 
                 VkBuffer m_buffer = VK_NULL_HANDLE;
                 VkDeviceMemory m_memory = VK_NULL_HANDLE;
+
+                VkBufferUsageFlags m_usage = 0;
 
                 uint64_t m_size = 0;
                 bool m_keep_mapped = false;
@@ -305,7 +307,7 @@ namespace arbor {
             std::expected<void, std::string> resize_viewport();
 
           protected:
-            std::expected<void, std::string> scene_reload();
+            std::expected<void, std::string> scene_reload_deferred();
 
           private:
             std::expected<uint32_t, std::string> acquire_image();
@@ -330,6 +332,8 @@ namespace arbor {
             std::expected<void, std::string> make_vertex_buffer();
             std::expected<void, std::string> make_index_buffer();
             std::expected<void, std::string> make_uniform_buffers();
+
+            std::expected<void, std::string> reload_scene();
 
             std::expected<std::tuple<VkImage, VkImageView, VkDeviceMemory>, std::string>
             make_image(uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage, VkImageAspectFlags aspect_mask,

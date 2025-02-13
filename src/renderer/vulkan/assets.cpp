@@ -12,6 +12,9 @@ namespace arbor {
             for (auto& id : m_engine.current_scene().drawable_objects()) {
                 auto& asset_library_entry = m_engine.current_scene().asset_library()[id];
 
+                if (m_textures.contains(id))
+                    continue;
+
                 for (auto& [type, texture] : asset_library_entry.material.textures()) {
                     if (auto res = texture.load(); !res)
                         return res;

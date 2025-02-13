@@ -38,9 +38,22 @@ namespace arbor {
                 vkDestroyRenderPass(m_renderer.vk.device, m_render_pass, nullptr);
         }
 
-        std::expected<void, std::string> renderer::pipeline::reload() {
+        std::expected<void, std::string> renderer::pipeline::reload(bool rebuild) {
+            if (m_descriptor_pool) {
+                vkDestroyDescriptorPool(m_renderer.vk.device, m_descriptor_pool, nullptr);
+                m_descriptor_pool = VK_NULL_HANDLE;
+            }
+
+            if (m_descriptor_set_layout) {
+                vkDestroyDescriptorSetLayout(m_renderer.vk.device, m_descriptor_set_layout, nullptr);
+                m_descriptor_set_layout = VK_NULL_HANDLE;
+            }
+
             if (auto res = make_vk_descriptor_pool_and_sets(); !res)
                 return res;
+
+            if (!rebuild)
+                return {};
 
             m_renderer.m_logger->trace("creating a vulkan pipeline layout");
 

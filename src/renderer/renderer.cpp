@@ -170,12 +170,19 @@ namespace arbor {
         }
 
         std::expected<void, std::string> renderer::update() {
+            vkWaitForFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame], VK_TRUE, uint64_t(-1));
+
             if (vk.deferred_swapchain_reload) {
-                reload_swapchain();
+                if (auto res = reload_swapchain(); !res)
+                    return res;
                 vk.deferred_swapchain_reload = false;
             }
 
-            vkWaitForFences(vk.device, 1, &vk.sync.in_flight_fences[vk.sync.current_frame], VK_TRUE, uint64_t(-1));
+            if (vk.deferred_scene_reload) {
+                if (auto res = reload_scene(); !res)
+                    return res;
+                vk.deferred_scene_reload = false;
+            }
 
             auto image_idx = acquire_image();
             if (!image_idx)
@@ -343,8 +350,34 @@ namespace arbor {
             return {};
         }
 
-        std::expected<void, std::string> renderer::scene_reload() {
-            return std::unexpected("renderer::scene_reload() unimplemented");
-        }
+        std::expected<void, std::string> renderer::scene_reload_deferred() {
+            vk.deferred_scene_reload = true;
+            return {};
+        };
+
+        std::expected<void, std::string> renderer::reload_scene() {
+            vkDeviceWaitIdle(vk.device);
+
+            vk.index_buffer.free();
+            vk.vertex_buffer.free();
+            vk.uniform_buffers.clear();
+
+            if (auto res = make_vertex_buffer(); !res)
+                return res;
+
+            if (auto res = make_index_buffer(); !res)
+                return res;
+
+            if (auto res = make_uniform_buffers(); !res)
+                return res;
+
+            if (auto res = load_assets(); !res)
+                return res;
+
+            if (auto res = m_pipelines.back().reload(false); !res)
+                return res;
+
+            return {};
+        };
     } // namespace engine
 } // namespace arbor

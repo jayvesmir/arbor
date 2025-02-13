@@ -184,7 +184,7 @@ namespace arbor {
 
         std::expected<void, std::string> instance::on_scene_change() {
             auto renderer = dynamic_cast<engine::renderer*>(m_components.at(component::etype::renderer).get());
-            return renderer->scene_reload();
+            return renderer->scene_reload_deferred();
         }
     } // namespace engine
 } // namespace arbor

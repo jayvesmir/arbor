@@ -16,6 +16,7 @@ namespace arbor {
             m_device = device;
             m_physical_device = physical_device;
             m_size = size;
+            m_usage = usage;
 
             create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
             create_info.size = size;
@@ -84,8 +85,8 @@ namespace arbor {
             staging_buffer.write_data(bytes, size);
 
             free();
-            make(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                 m_device, m_physical_device);
+            make(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | m_usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_device,
+                 m_physical_device);
 
             VkSubmitInfo submit_info{};
             VkCommandBufferBeginInfo begin_info{};
@@ -211,6 +212,8 @@ namespace arbor {
                     return res;
                 }
             }
+
+            update_ubos();
 
             return {};
         }
