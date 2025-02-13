@@ -6,6 +6,10 @@
 #include <string>
 
 namespace arbor {
+    namespace engine {
+        class instance;
+    }
+
     namespace scene {
         namespace controls {
             class control {
@@ -16,7 +20,9 @@ namespace arbor {
                 virtual ~control() = default;
 
               protected:
-                virtual std::expected<void, std::string> imgui_draw(const std::string& label) { return {}; };
+                virtual std::expected<void, std::string> imgui_draw(engine::instance& engine, const std::string& label) {
+                    return {};
+                };
             };
 
             class slider_f32 : public controls::control {
@@ -33,7 +39,20 @@ namespace arbor {
                 constexpr auto value() const { return m_value; }
 
               protected:
-                std::expected<void, std::string> imgui_draw(const std::string& label) override;
+                std::expected<void, std::string> imgui_draw(engine::instance& engine, const std::string& label) override;
+            };
+
+            class button : public controls::control {
+                friend class engine::renderer;
+
+                std::function<void(engine::instance&)> m_callback;
+
+              public:
+                ~button() = default;
+                button(const std::function<void(engine::instance&)>& callback) : m_callback(callback) {}
+
+              protected:
+                std::expected<void, std::string> imgui_draw(engine::instance& engine, const std::string& label) override;
             };
         } // namespace controls
     } // namespace scene

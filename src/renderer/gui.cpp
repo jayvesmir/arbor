@@ -131,7 +131,7 @@ namespace arbor {
                 ImGui::SeparatorText("scene controls");
 
                 for (auto& [label, control] : m_engine.current_scene().controls())
-                    control->imgui_draw(label);
+                    control->imgui_draw(m_engine, label);
             }
 
             ImGui::End();
